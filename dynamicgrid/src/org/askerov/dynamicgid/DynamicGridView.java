@@ -104,6 +104,16 @@ public class DynamicGridView extends GridView {
         }
     };
 
+    private OnItemClickListener mUserItemClickListener;
+    private OnItemClickListener mLocalItemClickListener = new OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (!isEditMode() && isEnabled() && mUserItemClickListener != null) {
+                mUserItemClickListener.onItemClick(parent, view, position, id);
+            }
+        }
+    };
+
     public DynamicGridView(Context context) {
         super(context);
         init(context);
@@ -151,6 +161,12 @@ public class DynamicGridView extends GridView {
     public void setOnItemLongClickListener(final OnItemLongClickListener listener) {
         mUserLongClickListener = listener;
         super.setOnItemLongClickListener(mLocalLongClickListener);
+    }
+
+    @Override
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.mUserItemClickListener = listener;
+        super.setOnItemClickListener(mLocalItemClickListener);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -799,6 +815,4 @@ public class DynamicGridView extends GridView {
             }
         }
     };
-
-
 }
