@@ -5,12 +5,12 @@ Drag and drop GridView for Android provide mechanism to rearrange grid items
 
 Requrements
 ----------
-Drag'n'drop require api 8 (Froyo).
+Rearranging items require api 8 (Froyo).
 All grid item animations require api 11 (Honeycomb).
 
 Usage
 ----------
-Usage same as for normal GridView expect adapter. Adapter must extends
+Usage same as for normal GridView except adapter. Adapter must extends
 [AbstractDynamicGridAdapter](https://github.com/askerov/DynamicGrid/blob/master/dynamicgrid/src/org/askerov/dynamicgid/AbstractDynamicGridAdapter.java "AbstractDynamicGridAdapter")
 or [BaseDynamicGridAdapter](https://github.com/askerov/DynamicGrid/blob/master/dynamicgrid/src/org/askerov/dynamicgid/BaseDynamicGridAdapter.java "BaseDynamicGridAdapter")   
        
@@ -36,7 +36,7 @@ Adding drop listener:
             }
         });
 
-You can find more detaile usage examle [here](https://github.com/askerov/DynamicGrid/tree/master/example).  
+You can find more detailes usage examle [here](https://github.com/askerov/DynamicGrid/tree/master/example).  
 
 Credits
 --------
