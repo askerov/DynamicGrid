@@ -10,7 +10,7 @@ import java.util.List;
  * Date: 9/6/13
  * Time: 7:43 PM
  */
-public abstract class AbstractGridAdapter extends BaseAdapter {
+public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
     public static final int INVALID_ID = -1;
 
 

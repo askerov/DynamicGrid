@@ -10,7 +10,7 @@ import java.util.List;
  * Date: 9/7/13
  * Time: 10:49 PM
  */
-public abstract class BaseDynamicGridAdapter extends AbstractGridAdapter {
+public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter {
     private Context mContext;
 
     private ArrayList<Object> mItems = new ArrayList<Object>();

@@ -28,7 +28,7 @@ import java.util.List;
  * Time: 12:31 PM
  */
 public class DynamicGridView extends GridView {
-    private static final int INVALID_ID = AbstractGridAdapter.INVALID_ID;
+    private static final int INVALID_ID = AbstractDynamicGridAdapter.INVALID_ID;
 
     private static final int MOVE_DURATION = 300;
     private static final int SMOOTH_SCROLL_AMOUNT_AT_EDGE = 8;
@@ -248,8 +248,8 @@ public class DynamicGridView extends GridView {
         return getAdapterInterface().getColumnCount();
     }
 
-    private AbstractGridAdapter getAdapterInterface() {
-        return ((AbstractGridAdapter) getAdapter());
+    private AbstractDynamicGridAdapter getAdapterInterface() {
+        return ((AbstractDynamicGridAdapter) getAdapter());
     }
 
     /**
@@ -289,7 +289,7 @@ public class DynamicGridView extends GridView {
 
     private void updateNeighborViewsForId(long itemId) {
         int position = getPositionForID(itemId);
-        AbstractGridAdapter adapter = (AbstractGridAdapter) getAdapter();
+        AbstractDynamicGridAdapter adapter = (AbstractDynamicGridAdapter) getAdapter();
 
         int nextPos = position + 1;
         int prevPos = position - 1;
@@ -319,7 +319,7 @@ public class DynamicGridView extends GridView {
 
     public View getViewForId(long itemId) {
         int firstVisiblePosition = getFirstVisiblePosition();
-        AbstractGridAdapter adapter = ((AbstractGridAdapter) getAdapter());
+        AbstractDynamicGridAdapter adapter = ((AbstractDynamicGridAdapter) getAdapter());
         for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
             int position = firstVisiblePosition + i;
