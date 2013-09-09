@@ -38,3 +38,7 @@ Adding drop listener:
 
 You can find more detaile usage examle [here](https://github.com/askerov/DynamicGrid/tree/master/example).  
 
+Credits
+--------
+DynamicGridView based on [Daniel Olshansky](https://plus.google.com/108153578400873445224/) ListView cell dragging and rearranging [video](https://www.youtube.com/watch?v=_BZIvjMgH-Q).  
+
