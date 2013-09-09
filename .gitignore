@@ -39,3 +39,11 @@ dynamicgrid/ant.properties
 dynamicgrid/.idea/
 
 dynamicgrid/.idea/codeStyleSettings.xml
+
+example/.idea/
+
+example/build.xml
+
+example/proguard-project.txt
+
+example/modules/
