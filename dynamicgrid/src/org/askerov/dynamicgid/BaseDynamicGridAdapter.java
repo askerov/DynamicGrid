@@ -81,6 +81,11 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
         return mColumnsCount;
     }
 
+    public void setColumnsCount(int columnsCount) {
+        this.mColumnsCount = columnsCount;
+        notifyDataSetChanged();
+    }
+
     @Override
     public void reorderItems(int originalPosition, int newPosition) {
         DynamicGridUtils.reorder(mItems, originalPosition, newPosition);
