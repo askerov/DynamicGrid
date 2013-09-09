@@ -10,8 +10,7 @@ import java.util.List;
  * Date: 9/6/13
  * Time: 7:43 PM
  */
-public abstract class AbstractGridAdapter extends BaseAdapter
-{
+public abstract class AbstractGridAdapter extends BaseAdapter {
     public static final int INVALID_ID = -1;
 
 
@@ -19,10 +18,9 @@ public abstract class AbstractGridAdapter extends BaseAdapter
 
     /**
      * @return return columns number for GridView. Need for compatibility
-     * (@link android.widget.GridView#getNumColumns() requires api 11)
+     *         (@link android.widget.GridView#getNumColumns() requires api 11)
      */
     public abstract int getColumnCount();
-
 
     /**
      * Determines how to reorder items dragged from <code>originalPosition</code> to <code>newPosition</code>
@@ -38,8 +36,7 @@ public abstract class AbstractGridAdapter extends BaseAdapter
      * @return
      */
     @Override
-    public final boolean hasStableIds()
-    {
+    public final boolean hasStableIds() {
         return true;
     }
 
@@ -48,8 +45,7 @@ public abstract class AbstractGridAdapter extends BaseAdapter
      *
      * @param item
      */
-    protected void addStableId(Object item)
-    {
+    protected void addStableId(Object item) {
         int newId = (int) getItemId(getCount() - 1);
         newId++;
         mIdMap.put(item, newId);
@@ -60,26 +56,23 @@ public abstract class AbstractGridAdapter extends BaseAdapter
      *
      * @param items
      */
-    protected void addAllStableId(List<?> items)
-    {
+    protected void addAllStableId(List<?> items) {
         int startId = (int) getItemId(getCount() - 1);
         startId++;
-        for (int i = startId; i < items.size(); i++)
-        {
+        for (int i = startId; i < items.size(); i++) {
             mIdMap.put(items.get(i), i);
         }
     }
 
     /**
      * get id for position
+     *
      * @param position
      * @return
      */
     @Override
-    public final long getItemId(int position)
-    {
-        if (position < 0 || position >= mIdMap.size())
-        {
+    public final long getItemId(int position) {
+        if (position < 0 || position >= mIdMap.size()) {
             return INVALID_ID;
         }
         Object item = getItem(position);
@@ -90,8 +83,7 @@ public abstract class AbstractGridAdapter extends BaseAdapter
      * clear stable id map
      * should called when clear adapter data;
      */
-    protected void clearStableIdMap()
-    {
+    protected void clearStableIdMap() {
         mIdMap.clear();
     }
 
@@ -100,8 +92,7 @@ public abstract class AbstractGridAdapter extends BaseAdapter
      *
      * @param item
      */
-    protected void removeStableID(Object item)
-    {
+    protected void removeStableID(Object item) {
         mIdMap.remove(item);
     }
 

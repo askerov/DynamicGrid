@@ -18,3 +18,24 @@ local.properties
 # Eclipse project files
 .classpath
 .project
+
+*.iml
+
+dynamicgrid/.idea/workspace.xml
+
+dynamicgrid/.idea/
+dynamicgrid/project.properties
+
+dynamicgrid/project.properties
+
+*.properties
+
+dynamicgrid/proguard-project.txt
+
+dynamicgrid/build.xml
+
+dynamicgrid/ant.properties
+
+dynamicgrid/.idea/
+
+dynamicgrid/.idea/codeStyleSettings.xml

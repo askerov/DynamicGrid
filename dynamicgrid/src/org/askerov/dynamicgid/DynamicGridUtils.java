@@ -7,8 +7,7 @@ import java.util.ArrayList;
  * Date: 9/7/13
  * Time: 10:14 PM
  */
-public class DynamicGridUtils
-{
+public class DynamicGridUtils {
     /**
      * Delete item in <code>list</code> from position <code>indexFrom</code> and insert it to <code>indexTwo</code>
      *
@@ -16,8 +15,7 @@ public class DynamicGridUtils
      * @param indexFrom
      * @param indexTwo
      */
-    public static void reorder(ArrayList list, int indexFrom, int indexTwo)
-    {
+    public static void reorder(ArrayList list, int indexFrom, int indexTwo) {
         Object obj = list.remove(indexFrom);
         list.add(indexTwo, obj);
     }
