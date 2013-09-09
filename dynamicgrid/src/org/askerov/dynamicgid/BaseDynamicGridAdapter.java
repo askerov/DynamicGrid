@@ -14,16 +14,16 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
     private Context mContext;
 
     private ArrayList<Object> mItems = new ArrayList<Object>();
-    private int mColumnsCount;
+    private int mColumnCount;
 
     protected BaseDynamicGridAdapter(Context context, int columnCount) {
         this.mContext = context;
-        this.mColumnsCount = columnCount;
+        this.mColumnCount = columnCount;
     }
 
     public BaseDynamicGridAdapter(Context context, List<?> items, int columnCount) {
         mContext = context;
-        mColumnsCount = columnCount;
+        mColumnCount = columnCount;
         init(items);
     }
 
@@ -78,11 +78,11 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
 
     @Override
     public int getColumnCount() {
-        return mColumnsCount;
+        return mColumnCount;
     }
 
-    public void setColumnsCount(int columnsCount) {
-        this.mColumnsCount = columnsCount;
+    public void setColumnCount(int columnCount) {
+        this.mColumnCount = columnCount;
         notifyDataSetChanged();
     }
 
