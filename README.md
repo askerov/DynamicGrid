@@ -1,7 +1,7 @@
 DynamicGrid
 ===========
 
-Drag and drop GridView for Android provide mechanism to rearrange grid items
+Drag and drop GridView for Android provide mechanism to reorder grid items
 
 Demo
 ----
