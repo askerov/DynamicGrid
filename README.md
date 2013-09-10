@@ -43,7 +43,7 @@ Adding drop listener:
             }
         });
 
-You can find more detailes usage examle [here](https://github.com/askerov/DynamicGrid/tree/master/example).  
+You can find more detailed usage examle [here](https://github.com/askerov/DynamicGrid/tree/master/example).  
 
 Credits
 --------
