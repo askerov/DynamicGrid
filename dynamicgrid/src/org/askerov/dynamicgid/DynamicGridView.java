@@ -49,6 +49,12 @@ public class DynamicGridView extends GridView {
     private long mRightId;
     private long mAboveId;
     private long mBelowId;
+    private long mAboveLeftId;
+    private long mAboveRightId;
+    private long mBelowLeftId;
+    private long mBelowRightId;
+
+
     private long mMobileItemId = INVALID_ID;
 
     private boolean mCellIsMobile = false;
@@ -293,6 +299,10 @@ public class DynamicGridView extends GridView {
 
         int nextPos = position + 1;
         int prevPos = position - 1;
+        int prevAbovePos = position - getColumnCount() - 1;
+        int nextAbovePos = position - getColumnCount() + 1;
+        int prevBelowPos = position + getColumnCount() - 1;
+        int nextBelowPos = position + getColumnCount() + 1;
 
         mRightId = nextPos % getColumnCount() != 0
                 ? adapter.getItemId(nextPos)
@@ -303,6 +313,19 @@ public class DynamicGridView extends GridView {
         mAboveId = adapter.getItemId(position - getColumnCount());
         mBelowId = adapter.getItemId(position + getColumnCount());
 
+        mAboveLeftId = prevAbovePos % getColumnCount() != getColumnCount() - 1
+                ? adapter.getItemId(prevAbovePos)
+                : INVALID_ID;
+        mAboveRightId = nextAbovePos % getColumnCount() != 0
+                ? adapter.getItemId(nextAbovePos)
+                : INVALID_ID;
+
+        mBelowLeftId = prevBelowPos % getColumnCount() != getColumnCount() - 1
+                ? adapter.getItemId(prevBelowPos)
+                : INVALID_ID;
+        mBelowRightId = nextBelowPos % getColumnCount() != 0
+                ? adapter.getItemId(nextBelowPos)
+                : INVALID_ID;
     }
 
     /**
@@ -521,6 +544,11 @@ public class DynamicGridView extends GridView {
         mRightId = INVALID_ID;
         mAboveId = INVALID_ID;
         mBelowId = INVALID_ID;
+        mAboveRightId = INVALID_ID;
+        mAboveLeftId = INVALID_ID;
+        mBelowLeftId = INVALID_ID;
+        mBelowRightId = INVALID_ID;
+
         mMobileItemId = INVALID_ID;
         mobileView.setVisibility(View.VISIBLE);
         mHoverCell = null;
@@ -568,21 +596,34 @@ public class DynamicGridView extends GridView {
         View leftView = getViewForId(mLeftId);
         View rightView = getViewForId(mRightId);
         View mobileView = getViewForId(mMobileItemId);
+        View aboveLeftView = getViewForId(mAboveLeftId);
+        View aboveRightView = getViewForId(mAboveRightId);
+        View belowLeftView = getViewForId(mBelowLeftId);
+        View belowRightView = getViewForId(mBelowRightId);
 
-        boolean isBelow = (belowView != null) && (deltaYTotal > belowView.getTop());
-        boolean isAbove = (aboveView != null) && (deltaYTotal < aboveView.getBottom());
-        boolean isRight = (rightView != null) && (deltaXTotal > rightView.getLeft());
-        boolean isLeft = (leftView != null) && (deltaXTotal < leftView.getRight());
+        boolean isBelowRight = belowRightView != null && deltaYTotal > belowRightView.getTop()
+                && deltaXTotal > belowRightView.getLeft();
+        boolean isBelowLeft = belowLeftView != null && deltaYTotal > belowLeftView.getTop()
+                && deltaXTotal < belowLeftView.getRight();
+        boolean isAboveRight = aboveRightView != null && deltaYTotal < aboveRightView.getBottom()
+                && deltaXTotal > aboveRightView.getLeft();
+        boolean isAboveLeft = aboveLeftView != null && deltaYTotal < aboveLeftView.getBottom()
+                && deltaXTotal < aboveLeftView.getRight();
+        boolean isBelow = belowView != null && deltaYTotal > belowView.getTop();
+        boolean isAbove = aboveView != null && deltaYTotal < aboveView.getBottom();
+        boolean isRight = rightView != null && deltaXTotal > rightView.getLeft();
+        boolean isLeft = leftView != null && deltaXTotal < leftView.getRight();
 
-        if (isAbove || isBelow || isRight || isLeft) {
+
+        if (isAbove || isBelow || isRight || isLeft || isAboveLeft || isAboveRight || isBelowLeft || isBelowRight) {
             final int originalPosition = getPositionForView(mobileView);
             int targetPosition = INVALID_POSITION;
             int numColumns = getColumnCount();
 
-            if (isAbove && isLeft) targetPosition = originalPosition - numColumns - 1;
-            else if (isAbove && isRight) targetPosition = originalPosition - numColumns + 1;
-            else if (isBelow && isLeft) targetPosition = originalPosition + numColumns - 1;
-            else if (isBelow && isRight) targetPosition = originalPosition + numColumns + 1;
+            if (isAboveLeft) targetPosition = originalPosition - numColumns - 1;
+            else if (isAboveRight) targetPosition = originalPosition - numColumns + 1;
+            else if (isBelowLeft) targetPosition = originalPosition + numColumns - 1;
+            else if (isBelowRight) targetPosition = originalPosition + numColumns + 1;
             else if (isAbove) targetPosition = originalPosition - numColumns;
             else if (isBelow) targetPosition = originalPosition + numColumns;
             else if (isLeft) targetPosition = originalPosition - 1;
