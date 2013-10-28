@@ -47,3 +47,5 @@ example/build.xml
 example/proguard-project.txt
 
 example/modules/
+.idea
+target/
