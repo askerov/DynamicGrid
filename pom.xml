@@ -55,4 +55,10 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>wta.internal</id>
+            <url>${wta.repo.release}</url>
+        </repository>
+    </distributionManagement>
 </project>
