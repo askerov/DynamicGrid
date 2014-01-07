@@ -22,7 +22,7 @@ public class GridActivity extends Activity {
         gridView.setAdapter(new CheeseDynamicAdapter(this,
                 new ArrayList<String>(Arrays.asList(Cheeses.sCheeseStrings)),
                 3));
-        //add callback to stop edit mode if needed
+//        add callback to stop edit mode if needed
 //        gridView.setOnDropListener(new DynamicGridView.OnDropListener()
 //        {
 //            @Override

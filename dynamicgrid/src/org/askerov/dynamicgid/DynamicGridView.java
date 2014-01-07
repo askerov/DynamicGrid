@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
@@ -19,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,8 +29,7 @@ import java.util.List;
  * Date: 9/6/13
  * Time: 12:31 PM
  */
-public class DynamicGridView extends GridView
-{
+public class DynamicGridView extends GridView {
     private static final int INVALID_ID = AbstractDynamicGridAdapter.INVALID_ID;
 
     private static final int MOVE_DURATION = 300;
@@ -46,20 +47,11 @@ public class DynamicGridView extends GridView
     private int mLastEventY = -1;
     private int mLastEventX = -1;
 
-    private long mLeftId;
-    private long mRightId;
-    private long mAboveId;
-    private long mBelowId;
-    private long mAboveLeftId;
-    private long mAboveRightId;
-    private long mBelowLeftId;
-    private long mBelowRightId;
-
+    private List<Long> idList = new ArrayList<Long>();
 
     private long mMobileItemId = INVALID_ID;
 
     private boolean mCellIsMobile = false;
-
     private int mActivePointerId = INVALID_ID;
 
     private boolean mIsMobileScrolling;
@@ -68,21 +60,15 @@ public class DynamicGridView extends GridView
     private int mScrollState = OnScrollListener.SCROLL_STATE_IDLE;
 
     private boolean mIsEditMode = false;
-
     private List<ObjectAnimator> mWobbleAnimators = new LinkedList<ObjectAnimator>();
-
     private OnDropListener mDropListener;
-
     private boolean mHoverAnimation;
     private boolean mReorderAnimation;
-
     private boolean mWobbleInEditMode = true;
 
     private OnItemLongClickListener mUserLongClickListener;
-    private OnItemLongClickListener mLocalLongClickListener = new OnItemLongClickListener()
-    {
-        public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id)
-        {
+    private OnItemLongClickListener mLocalLongClickListener = new OnItemLongClickListener() {
+        public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
             if (!isEnabled() || isEditMode())
                 return false;
             mTotalOffsetY = 0;
@@ -94,7 +80,7 @@ public class DynamicGridView extends GridView
             View selectedView = getChildAt(itemNum);
             mMobileItemId = getAdapter().getItemId(position);
             mHoverCell = getAndAddHoverView(selectedView);
-            if (isPostHoneycomb())
+            if (isPostHoneycomb() && selectedView != null)
                 selectedView.setVisibility(View.INVISIBLE);
 
             mCellIsMobile = true;
@@ -114,92 +100,75 @@ public class DynamicGridView extends GridView
     };
 
     private OnItemClickListener mUserItemClickListener;
-    private OnItemClickListener mLocalItemClickListener = new OnItemClickListener()
-    {
+    private OnItemClickListener mLocalItemClickListener = new OnItemClickListener() {
         @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-        {
-            if (!isEditMode() && isEnabled() && mUserItemClickListener != null)
-            {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (!isEditMode() && isEnabled() && mUserItemClickListener != null) {
                 mUserItemClickListener.onItemClick(parent, view, position, id);
             }
         }
     };
 
-    public DynamicGridView(Context context)
-    {
+    public DynamicGridView(Context context) {
         super(context);
         init(context);
     }
 
-    public DynamicGridView(Context context, AttributeSet attrs)
-    {
+    public DynamicGridView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
-    public DynamicGridView(Context context, AttributeSet attrs, int defStyle)
-    {
+    public DynamicGridView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context);
     }
 
-    public void setOnDropListener(OnDropListener dropListener)
-    {
+    public void setOnDropListener(OnDropListener dropListener) {
         this.mDropListener = dropListener;
     }
 
-    public void startEditMode()
-    {
+    public void startEditMode() {
         mIsEditMode = true;
         if (isPostHoneycomb() && mWobbleInEditMode)
             startWobbleAnimation();
     }
 
-    public void stopEditMode()
-    {
+    public void stopEditMode() {
         mIsEditMode = false;
         if (isPostHoneycomb() && mWobbleInEditMode)
             stopWobble(true);
     }
 
-    public boolean isEditMode()
-    {
+    public boolean isEditMode() {
         return mIsEditMode;
     }
 
-    public boolean isWobbleInEditMode()
-    {
+    public boolean isWobbleInEditMode() {
         return mWobbleInEditMode;
     }
 
-    public void setWobbleInEditMode(boolean wobbleInEditMode)
-    {
+    public void setWobbleInEditMode(boolean wobbleInEditMode) {
         this.mWobbleInEditMode = wobbleInEditMode;
     }
 
     @Override
-    public void setOnItemLongClickListener(final OnItemLongClickListener listener)
-    {
+    public void setOnItemLongClickListener(final OnItemLongClickListener listener) {
         mUserLongClickListener = listener;
         super.setOnItemLongClickListener(mLocalLongClickListener);
     }
 
     @Override
-    public void setOnItemClickListener(OnItemClickListener listener)
-    {
+    public void setOnItemClickListener(OnItemClickListener listener) {
         this.mUserItemClickListener = listener;
         super.setOnItemClickListener(mLocalItemClickListener);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void startWobbleAnimation()
-    {
-        for (int i = 0; i < getChildCount(); i++)
-        {
+    private void startWobbleAnimation() {
+        for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
-            if (v != null && Boolean.TRUE != v.getTag(R.id.dynamic_grid_wobble_tag))
-            {
+            if (v != null && Boolean.TRUE != v.getTag(R.id.dynamic_grid_wobble_tag)) {
                 if (i % 2 == 0)
                     animateWobble(v);
                 else
@@ -210,18 +179,14 @@ public class DynamicGridView extends GridView
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void stopWobble(boolean resetRotation)
-    {
-        for (Animator wobbleAnimator : mWobbleAnimators)
-        {
+    private void stopWobble(boolean resetRotation) {
+        for (Animator wobbleAnimator : mWobbleAnimators) {
             wobbleAnimator.cancel();
         }
         mWobbleAnimators.clear();
-        for (int i = 0; i < getChildCount(); i++)
-        {
+        for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
-            if (v != null)
-            {
+            if (v != null) {
                 if (resetRotation) v.setRotation(0);
                 v.setTag(R.id.dynamic_grid_wobble_tag, false);
             }
@@ -229,14 +194,12 @@ public class DynamicGridView extends GridView
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void restartWobble()
-    {
+    private void restartWobble() {
         stopWobble(false);
         startWobbleAnimation();
     }
 
-    public void init(Context context)
-    {
+    public void init(Context context) {
         setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int) (SMOOTH_SCROLL_AMOUNT_AT_EDGE * metrics.density + 0.5f);
@@ -244,8 +207,7 @@ public class DynamicGridView extends GridView
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateWobble(View v)
-    {
+    private void animateWobble(View v) {
         ObjectAnimator animator = createBaseWobble(v);
         animator.setFloatValues(-2, 2);
         animator.start();
@@ -253,8 +215,7 @@ public class DynamicGridView extends GridView
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateWobbleInverse(View v)
-    {
+    private void animateWobbleInverse(View v) {
         ObjectAnimator animator = createBaseWobble(v);
         animator.setFloatValues(2, -2);
         animator.start();
@@ -263,8 +224,7 @@ public class DynamicGridView extends GridView
 
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private ObjectAnimator createBaseWobble(View v)
-    {
+    private ObjectAnimator createBaseWobble(View v) {
         ObjectAnimator animator = new ObjectAnimator();
         animator.setDuration(180);
         animator.setRepeatMode(ValueAnimator.REVERSE);
@@ -275,18 +235,15 @@ public class DynamicGridView extends GridView
     }
 
 
-    private void reorderElements(int originalPosition, int targetPosition)
-    {
+    private void reorderElements(int originalPosition, int targetPosition) {
         getAdapterInterface().reorderItems(originalPosition, targetPosition);
     }
 
-    private int getColumnCount()
-    {
+    private int getColumnCount() {
         return getAdapterInterface().getColumnCount();
     }
 
-    private AbstractDynamicGridAdapter getAdapterInterface()
-    {
+    private AbstractDynamicGridAdapter getAdapterInterface() {
         return ((AbstractDynamicGridAdapter) getAdapter());
     }
 
@@ -295,8 +252,7 @@ public class DynamicGridView extends GridView
      * size. The hover cell's BitmapDrawable is drawn on top of the bitmap every
      * single time an invalidate call is made.
      */
-    private BitmapDrawable getAndAddHoverView(View v)
-    {
+    private BitmapDrawable getAndAddHoverView(View v) {
 
         int w = v.getWidth();
         int h = v.getHeight();
@@ -318,8 +274,7 @@ public class DynamicGridView extends GridView
     /**
      * Returns a bitmap showing a screenshot of the view passed in.
      */
-    private Bitmap getBitmapFromView(View v)
-    {
+    private Bitmap getBitmapFromView(View v) {
         Bitmap bitmap = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         v.draw(canvas);
@@ -327,68 +282,35 @@ public class DynamicGridView extends GridView
     }
 
 
-    private void updateNeighborViewsForId(long itemId)
-    {
-        int position = getPositionForID(itemId);
-        AbstractDynamicGridAdapter adapter = (AbstractDynamicGridAdapter) getAdapter();
-
-        int nextPos = position + 1;
-        int prevPos = position - 1;
-        int prevAbovePos = position - getColumnCount() - 1;
-        int nextAbovePos = position - getColumnCount() + 1;
-        int prevBelowPos = position + getColumnCount() - 1;
-        int nextBelowPos = position + getColumnCount() + 1;
-
-        mRightId = nextPos % getColumnCount() != 0
-                ? adapter.getItemId(nextPos)
-                : INVALID_ID;
-        mLeftId = prevPos % getColumnCount() != getColumnCount() - 1
-                ? adapter.getItemId(prevPos)
-                : INVALID_ID;
-        mAboveId = adapter.getItemId(position - getColumnCount());
-        mBelowId = adapter.getItemId(position + getColumnCount());
-
-        mAboveLeftId = prevAbovePos % getColumnCount() != getColumnCount() - 1
-                ? adapter.getItemId(prevAbovePos)
-                : INVALID_ID;
-        mAboveRightId = nextAbovePos % getColumnCount() != 0
-                ? adapter.getItemId(nextAbovePos)
-                : INVALID_ID;
-
-        mBelowLeftId = prevBelowPos % getColumnCount() != getColumnCount() - 1
-                ? adapter.getItemId(prevBelowPos)
-                : INVALID_ID;
-        mBelowRightId = nextBelowPos % getColumnCount() != 0
-                ? adapter.getItemId(nextBelowPos)
-                : INVALID_ID;
+    private void updateNeighborViewsForId(long itemId) {
+        int draggedPos = getPositionForID(itemId);
+        for (int pos = getFirstVisiblePosition(); pos <= getLastVisiblePosition(); pos++) {
+            if (draggedPos != pos) {
+                idList.add(getId(pos));
+            }
+        }
     }
 
     /**
      * Retrieves the position in the grid corresponding to <code>itemId</code>
      */
-    public int getPositionForID(long itemId)
-    {
+    public int getPositionForID(long itemId) {
         View v = getViewForId(itemId);
-        if (v == null)
-        {
+        if (v == null) {
             return -1;
-        } else
-        {
+        } else {
             return getPositionForView(v);
         }
     }
 
-    public View getViewForId(long itemId)
-    {
+    public View getViewForId(long itemId) {
         int firstVisiblePosition = getFirstVisiblePosition();
         AbstractDynamicGridAdapter adapter = ((AbstractDynamicGridAdapter) getAdapter());
-        for (int i = 0; i < getChildCount(); i++)
-        {
+        for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
             int position = firstVisiblePosition + i;
             long id = adapter.getItemId(position);
-            if (id == itemId)
-            {
+            if (id == itemId) {
                 return v;
             }
         }
@@ -396,17 +318,14 @@ public class DynamicGridView extends GridView
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        switch (event.getAction() & MotionEvent.ACTION_MASK)
-        {
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
                 mDownX = (int) event.getX();
                 mDownY = (int) event.getY();
                 mActivePointerId = event.getPointerId(0);
 
-                if (mIsEditMode && isEnabled())
-                {
+                if (mIsEditMode && isEnabled()) {
                     layoutChildren();
 
                     mTotalOffsetY = 0;
@@ -415,11 +334,9 @@ public class DynamicGridView extends GridView
                     int position = pointToPosition(mDownX, mDownY);
                     int itemNum = position - getFirstVisiblePosition();
                     View selectedView = getChildAt(itemNum);
-                    if (selectedView == null)
-                    {
+                    if (selectedView == null) {
                         return false;
-                    } else
-                    {
+                    } else {
                         mMobileItemId = getAdapter().getItemId(position);
                         mHoverCell = getAndAddHoverView(selectedView);
                         if (isPostHoneycomb())
@@ -427,15 +344,13 @@ public class DynamicGridView extends GridView
                         mCellIsMobile = true;
                         updateNeighborViewsForId(mMobileItemId);
                     }
-                } else if (!isEnabled())
-                {
+                } else if (!isEnabled()) {
                     return false;
                 }
 
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (mActivePointerId == INVALID_ID)
-                {
+                if (mActivePointerId == INVALID_ID) {
                     break;
                 }
 
@@ -446,8 +361,7 @@ public class DynamicGridView extends GridView
                 int deltaY = mLastEventY - mDownY;
                 int deltaX = mLastEventX - mDownX;
 
-                if (mCellIsMobile)
-                {
+                if (mCellIsMobile) {
                     mHoverCellCurrentBounds.offsetTo(mHoverCellOriginalBounds.left + deltaX + mTotalOffsetX,
                             mHoverCellOriginalBounds.top + deltaY + mTotalOffsetY);
                     mHoverCell.setBounds(mHoverCellCurrentBounds);
@@ -462,15 +376,13 @@ public class DynamicGridView extends GridView
                 break;
             case MotionEvent.ACTION_UP:
                 touchEventsEnded();
-                if (mDropListener != null)
-                {
+                if (mDropListener != null) {
                     mDropListener.onActionDrop();
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
                 touchEventsCancelled();
-                if (mDropListener != null)
-                {
+                if (mDropListener != null) {
                     mDropListener.onActionDrop();
                 }
                 break;
@@ -482,8 +394,7 @@ public class DynamicGridView extends GridView
                 pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
                         MotionEvent.ACTION_POINTER_INDEX_SHIFT;
                 final int pointerId = event.getPointerId(pointerIndex);
-                if (pointerId == mActivePointerId)
-                {
+                if (pointerId == mActivePointerId) {
                     touchEventsEnded();
                 }
                 break;
@@ -494,13 +405,11 @@ public class DynamicGridView extends GridView
         return super.onTouchEvent(event);
     }
 
-    private void handleMobileCellScroll()
-    {
+    private void handleMobileCellScroll() {
         mIsMobileScrolling = handleMobileCellScroll(mHoverCellCurrentBounds);
     }
 
-    public boolean handleMobileCellScroll(Rect r)
-    {
+    public boolean handleMobileCellScroll(Rect r) {
         int offset = computeVerticalScrollOffset();
         int height = getHeight();
         int extent = computeVerticalScrollExtent();
@@ -508,14 +417,12 @@ public class DynamicGridView extends GridView
         int hoverViewTop = r.top;
         int hoverHeight = r.height();
 
-        if (hoverViewTop <= 0 && offset > 0)
-        {
+        if (hoverViewTop <= 0 && offset > 0) {
             smoothScrollBy(-mSmoothScrollAmountAtEdge, 0);
             return true;
         }
 
-        if (hoverViewTop + hoverHeight >= height && (offset + extent) < range)
-        {
+        if (hoverViewTop + hoverHeight >= height && (offset + extent) < range) {
             smoothScrollBy(mSmoothScrollAmountAtEdge, 0);
             return true;
         }
@@ -524,16 +431,13 @@ public class DynamicGridView extends GridView
     }
 
     @Override
-    public void setAdapter(ListAdapter adapter)
-    {
+    public void setAdapter(ListAdapter adapter) {
         super.setAdapter(adapter);
     }
 
-    private void touchEventsEnded()
-    {
+    private void touchEventsEnded() {
         final View mobileView = getViewForId(mMobileItemId);
-        if (mCellIsMobile || mIsWaitingForScrollFinish)
-        {
+        if (mCellIsMobile || mIsWaitingForScrollFinish) {
             mCellIsMobile = false;
             mIsWaitingForScrollFinish = false;
             mIsMobileScrolling = false;
@@ -542,44 +446,36 @@ public class DynamicGridView extends GridView
             // If the autoscroller has not completed scrolling, we need to wait for it to
             // finish in order to determine the final location of where the hover cell
             // should be animated to.
-            if (mScrollState != OnScrollListener.SCROLL_STATE_IDLE)
-            {
+            if (mScrollState != OnScrollListener.SCROLL_STATE_IDLE) {
                 mIsWaitingForScrollFinish = true;
                 return;
             }
 
             mHoverCellCurrentBounds.offsetTo(mobileView.getLeft(), mobileView.getTop());
 
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB)
-            {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
                 animateBounds(mobileView);
-            } else
-            {
+            } else {
                 mHoverCell.setBounds(mHoverCellCurrentBounds);
                 invalidate();
                 reset(mobileView);
             }
-        } else
-        {
+        } else {
             touchEventsCancelled();
         }
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateBounds(final View mobileView)
-    {
-        TypeEvaluator<Rect> sBoundEvaluator = new TypeEvaluator<Rect>()
-        {
-            public Rect evaluate(float fraction, Rect startValue, Rect endValue)
-            {
+    private void animateBounds(final View mobileView) {
+        TypeEvaluator<Rect> sBoundEvaluator = new TypeEvaluator<Rect>() {
+            public Rect evaluate(float fraction, Rect startValue, Rect endValue) {
                 return new Rect(interpolate(startValue.left, endValue.left, fraction),
                         interpolate(startValue.top, endValue.top, fraction),
                         interpolate(startValue.right, endValue.right, fraction),
                         interpolate(startValue.bottom, endValue.bottom, fraction));
             }
 
-            public int interpolate(int start, int end, float fraction)
-            {
+            public int interpolate(int start, int end, float fraction) {
                 return (int) (start + fraction * (end - start));
             }
         };
@@ -587,26 +483,21 @@ public class DynamicGridView extends GridView
 
         ObjectAnimator hoverViewAnimator = ObjectAnimator.ofObject(mHoverCell, "bounds",
                 sBoundEvaluator, mHoverCellCurrentBounds);
-        hoverViewAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener()
-        {
+        hoverViewAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator)
-            {
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
                 invalidate();
             }
         });
-        hoverViewAnimator.addListener(new AnimatorListenerAdapter()
-        {
+        hoverViewAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationStart(Animator animation)
-            {
+            public void onAnimationStart(Animator animation) {
                 mHoverAnimation = true;
                 updateEnableState();
             }
 
             @Override
-            public void onAnimationEnd(Animator animation)
-            {
+            public void onAnimationEnd(Animator animation) {
                 mHoverAnimation = false;
                 updateEnableState();
                 reset(mobileView);
@@ -615,17 +506,8 @@ public class DynamicGridView extends GridView
         hoverViewAnimator.start();
     }
 
-    private void reset(View mobileView)
-    {
-        mLeftId = INVALID_ID;
-        mRightId = INVALID_ID;
-        mAboveId = INVALID_ID;
-        mBelowId = INVALID_ID;
-        mAboveRightId = INVALID_ID;
-        mAboveLeftId = INVALID_ID;
-        mBelowLeftId = INVALID_ID;
-        mBelowRightId = INVALID_ID;
-
+    private void reset(View mobileView) {
+        idList.clear();
         mMobileItemId = INVALID_ID;
         mobileView.setVisibility(View.VISIBLE);
         mHoverCell = null;
@@ -634,11 +516,9 @@ public class DynamicGridView extends GridView
         if (mIsEditMode && isPostHoneycomb() && mWobbleInEditMode)
             restartWobble();
         invalidate();
-
     }
 
-    private void updateEnableState()
-    {
+    private void updateEnableState() {
         setEnabled(!mHoverAnimation && !mReorderAnimation);
     }
 
@@ -648,16 +528,13 @@ public class DynamicGridView extends GridView
      *
      * @return
      */
-    private boolean isPostHoneycomb()
-    {
+    private boolean isPostHoneycomb() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
     }
 
-    private void touchEventsCancelled()
-    {
+    private void touchEventsCancelled() {
         View mobileView = getViewForId(mMobileItemId);
-        if (mCellIsMobile)
-        {
+        if (mCellIsMobile) {
             reset(mobileView);
         }
         mCellIsMobile = false;
@@ -666,83 +543,64 @@ public class DynamicGridView extends GridView
 
     }
 
-    private void handleCellSwitch()
-    {
+    private void handleCellSwitch() {
         final int deltaY = mLastEventY - mDownY;
         final int deltaX = mLastEventX - mDownX;
         final int deltaYTotal = mHoverCellOriginalBounds.centerY() + mTotalOffsetY + deltaY;
         final int deltaXTotal = mHoverCellOriginalBounds.centerX() + mTotalOffsetX + deltaX;
-
-        View belowView = getViewForId(mBelowId);
-        View aboveView = getViewForId(mAboveId);
-        View leftView = getViewForId(mLeftId);
-        View rightView = getViewForId(mRightId);
         View mobileView = getViewForId(mMobileItemId);
-        View aboveLeftView = getViewForId(mAboveLeftId);
-        View aboveRightView = getViewForId(mAboveRightId);
-        View belowLeftView = getViewForId(mBelowLeftId);
-        View belowRightView = getViewForId(mBelowRightId);
-
-        boolean isBelowRight = belowRightView != null && deltaYTotal > belowRightView.getTop()
-                && deltaXTotal > belowRightView.getLeft();
-        boolean isBelowLeft = belowLeftView != null && deltaYTotal > belowLeftView.getTop()
-                && deltaXTotal < belowLeftView.getRight();
-        boolean isAboveRight = aboveRightView != null && deltaYTotal < aboveRightView.getBottom()
-                && deltaXTotal > aboveRightView.getLeft();
-        boolean isAboveLeft = aboveLeftView != null && deltaYTotal < aboveLeftView.getBottom()
-                && deltaXTotal < aboveLeftView.getRight();
-        boolean isBelow = belowView != null && deltaYTotal > belowView.getTop();
-        boolean isAbove = aboveView != null && deltaYTotal < aboveView.getBottom();
-        boolean isRight = rightView != null && deltaXTotal > rightView.getLeft();
-        boolean isLeft = leftView != null && deltaXTotal < leftView.getRight();
-
-
-        if (isAbove || isBelow || isRight || isLeft || isAboveLeft || isAboveRight || isBelowLeft || isBelowRight)
-        {
+        View targetView = null;
+        float vX = 0;
+        float vY = 0;
+        Point mobileColumnRowPair = getColumnAndRowForView(mobileView);
+        for (Long id : idList) {
+            View view = getViewForId(id);
+            if (view != null) {
+                Point targetColumnRowPair = getColumnAndRowForView(view);
+                if ((aboveRight(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaYTotal < view.getBottom() && deltaXTotal > view.getLeft()
+                        || aboveLeft(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaYTotal < view.getBottom() && deltaXTotal < view.getRight()
+                        || belowRight(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaYTotal > view.getTop() && deltaXTotal > view.getLeft()
+                        || belowLeft(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaYTotal > view.getTop() && deltaXTotal < view.getRight()
+                        || above(targetColumnRowPair, mobileColumnRowPair) && deltaYTotal < view.getBottom())
+                        || below(targetColumnRowPair, mobileColumnRowPair) && deltaYTotal > view.getTop()
+                        || right(targetColumnRowPair, mobileColumnRowPair) && deltaXTotal > view.getLeft()
+                        || left(targetColumnRowPair, mobileColumnRowPair) && deltaXTotal < view.getRight()) {
+                    float xDiff = Math.abs(DynamicGridUtils.getViewX(view) - DynamicGridUtils.getViewX(mobileView));
+                    float yDiff = Math.abs(DynamicGridUtils.getViewY(view) - DynamicGridUtils.getViewY(mobileView));
+                    if (xDiff >= vX && yDiff >= vY) {
+                        vX = xDiff;
+                        vY = yDiff;
+                        targetView = view;
+                    }
+                }
+            }
+        }
+        if (targetView != null) {
             final int originalPosition = getPositionForView(mobileView);
-            int targetPosition = INVALID_POSITION;
-            int numColumns = getColumnCount();
+            int targetPosition = getPositionForView(targetView);
 
-            if (isAboveLeft) targetPosition = originalPosition - numColumns - 1;
-            else if (isAboveRight) targetPosition = originalPosition - numColumns + 1;
-            else if (isBelowLeft) targetPosition = originalPosition + numColumns - 1;
-            else if (isBelowRight) targetPosition = originalPosition + numColumns + 1;
-            else if (isAbove) targetPosition = originalPosition - numColumns;
-            else if (isBelow) targetPosition = originalPosition + numColumns;
-            else if (isLeft) targetPosition = originalPosition - 1;
-            else if (isRight) targetPosition = originalPosition + 1;
-
-            if (targetPosition == INVALID_POSITION)
-            {
+            if (targetPosition == INVALID_POSITION) {
                 updateNeighborViewsForId(mMobileItemId);
                 return;
             }
-            final View targetView = getViewForId(getId(targetPosition));
             reorderElements(originalPosition, targetPosition);
-
             mDownY = mLastEventY;
             mDownX = mLastEventX;
-
             mobileView.setVisibility(View.VISIBLE);
-
-            if (isPostHoneycomb())
-            {
+            if (isPostHoneycomb()) {
                 targetView.setVisibility(View.INVISIBLE);
             }
-
             updateNeighborViewsForId(mMobileItemId);
-
             final ViewTreeObserver observer = getViewTreeObserver();
             final int finalTargetPosition = targetPosition;
-
-
-            if (isPostHoneycomb())
-            {
-                observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener()
-                {
+            if (isPostHoneycomb() && observer != null) {
+                observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                     @Override
-                    public boolean onPreDraw()
-                    {
+                    public boolean onPreDraw() {
                         observer.removeOnPreDrawListener(this);
                         mTotalOffsetY += deltaY;
                         mTotalOffsetX += deltaX;
@@ -750,48 +608,76 @@ public class DynamicGridView extends GridView
                         return true;
                     }
                 });
-            } else
-            {
+            } else {
                 mTotalOffsetY += deltaY;
                 mTotalOffsetX += deltaX;
             }
-
         }
     }
 
-    private long getId(int position)
-    {
+    private boolean belowLeft(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y > mobileColumnRowPair.y && targetColumnRowPair.x < mobileColumnRowPair.x;
+    }
+
+    private boolean belowRight(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y > mobileColumnRowPair.y && targetColumnRowPair.x > mobileColumnRowPair.x;
+    }
+
+    private boolean aboveLeft(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y < mobileColumnRowPair.y && targetColumnRowPair.x < mobileColumnRowPair.x;
+    }
+
+    private boolean aboveRight(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y < mobileColumnRowPair.y && targetColumnRowPair.x > mobileColumnRowPair.x;
+    }
+
+    private boolean above(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y < mobileColumnRowPair.y && targetColumnRowPair.x == mobileColumnRowPair.x;
+    }
+
+    private boolean below(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y > mobileColumnRowPair.y && targetColumnRowPair.x == mobileColumnRowPair.x;
+    }
+
+    private boolean right(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y == mobileColumnRowPair.y && targetColumnRowPair.x > mobileColumnRowPair.x;
+    }
+
+    private boolean left(Point targetColumnRowPair, Point mobileColumnRowPair) {
+        return targetColumnRowPair.y == mobileColumnRowPair.y && targetColumnRowPair.x < mobileColumnRowPair.x;
+    }
+
+    private Point getColumnAndRowForView(View view) {
+        int pos = getPositionForView(view);
+        int columns = getColumnCount();
+        int column = pos % columns;
+        int row = pos / columns;
+        return new Point(column, row);
+    }
+
+    private long getId(int position) {
         return getAdapter().getItemId(position);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateReorder(final int oldPosition, final int newPosition)
-    {
+    private void animateReorder(final int oldPosition, final int newPosition) {
         boolean isForward = newPosition > oldPosition;
         List<Animator> resultList = new LinkedList<Animator>();
-        if (isForward)
-        {
-            for (int pos = Math.min(oldPosition, newPosition); pos < Math.max(oldPosition, newPosition); pos++)
-            {
+        if (isForward) {
+            for (int pos = Math.min(oldPosition, newPosition); pos < Math.max(oldPosition, newPosition); pos++) {
                 View view = getViewForId(getId(pos));
-                if ((pos + 1) % getColumnCount() == 0)
-                {
+                if ((pos + 1) % getColumnCount() == 0) {
                     resultList.add(createTranslationAnimations(view, -view.getWidth() * (getColumnCount() - 1), 0, view.getHeight(), 0));
-                } else
-                {
+                } else {
                     resultList.add(createTranslationAnimations(view, view.getWidth(), 0, 0, 0));
                 }
             }
-        } else
-        {
-            for (int pos = Math.max(oldPosition, newPosition); pos > Math.min(oldPosition, newPosition); pos--)
-            {
+        } else {
+            for (int pos = Math.max(oldPosition, newPosition); pos > Math.min(oldPosition, newPosition); pos--) {
                 View view = getViewForId(getId(pos));
-                if ((pos + getColumnCount()) % getColumnCount() == 0)
-                {
+                if ((pos + getColumnCount()) % getColumnCount() == 0) {
                     resultList.add(createTranslationAnimations(view, view.getWidth() * (getColumnCount() - 1), 0, -view.getHeight(), 0));
-                } else
-                {
+                } else {
                     resultList.add(createTranslationAnimations(view, -view.getWidth(), 0, 0, 0));
                 }
             }
@@ -801,18 +687,15 @@ public class DynamicGridView extends GridView
         resultSet.playTogether(resultList);
         resultSet.setDuration(MOVE_DURATION);
         resultSet.setInterpolator(new AccelerateDecelerateInterpolator());
-        resultSet.addListener(new AnimatorListenerAdapter()
-        {
+        resultSet.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationStart(Animator animation)
-            {
+            public void onAnimationStart(Animator animation) {
                 mReorderAnimation = true;
                 updateEnableState();
             }
 
             @Override
-            public void onAnimationEnd(Animator animation)
-            {
+            public void onAnimationEnd(Animator animation) {
                 mReorderAnimation = false;
                 updateEnableState();
             }
@@ -822,8 +705,7 @@ public class DynamicGridView extends GridView
 
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private AnimatorSet createTranslationAnimations(View view, float startX, float endX, float startY, float endY)
-    {
+    private AnimatorSet createTranslationAnimations(View view, float startX, float endX, float startY, float endY) {
         ObjectAnimator animX = ObjectAnimator.ofFloat(view, "translationX", startX, endX);
         ObjectAnimator animY = ObjectAnimator.ofFloat(view, "translationY", startY, endY);
         AnimatorSet animSetXY = new AnimatorSet();
@@ -832,11 +714,9 @@ public class DynamicGridView extends GridView
     }
 
     @Override
-    protected void dispatchDraw(Canvas canvas)
-    {
+    protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        if (mHoverCell != null)
-        {
+        if (mHoverCell != null) {
             mHoverCell.draw(canvas);
         }
     }
@@ -844,12 +724,12 @@ public class DynamicGridView extends GridView
     /**
      * Interface provide callback for end of drag'n'drop event
      */
-    public interface OnDropListener
-    {
+    public interface OnDropListener {
         /**
          * called when view been dropped
          */
         void onActionDrop();
+
     }
 
 
@@ -860,8 +740,7 @@ public class DynamicGridView extends GridView
      * scrolling takes place, the gridview continuously checks if new cells became visible
      * and determines whether they are potential candidates for a cell swap.
      */
-    private OnScrollListener mScrollListener = new OnScrollListener()
-    {
+    private OnScrollListener mScrollListener = new OnScrollListener() {
 
         private int mPreviousFirstVisibleItem = -1;
         private int mPreviousVisibleItemCount = -1;
@@ -870,8 +749,7 @@ public class DynamicGridView extends GridView
         private int mCurrentScrollState;
 
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
-                             int totalItemCount)
-        {
+                             int totalItemCount) {
             mCurrentFirstVisibleItem = firstVisibleItem;
             mCurrentVisibleItemCount = visibleItemCount;
 
@@ -885,30 +763,24 @@ public class DynamicGridView extends GridView
 
             mPreviousFirstVisibleItem = mCurrentFirstVisibleItem;
             mPreviousVisibleItemCount = mCurrentVisibleItemCount;
-            if (isPostHoneycomb() && mWobbleInEditMode)
-            {
+            if (isPostHoneycomb() && mWobbleInEditMode) {
                 updateWobbleState(visibleItemCount);
             }
         }
 
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-        private void updateWobbleState(int visibleItemCount)
-        {
-            for (int i = 0; i < visibleItemCount; i++)
-            {
+        private void updateWobbleState(int visibleItemCount) {
+            for (int i = 0; i < visibleItemCount; i++) {
                 View child = getChildAt(i);
 
-                if (child != null)
-                {
-                    if (mMobileItemId != INVALID_ID && Boolean.TRUE != child.getTag(R.id.dynamic_grid_wobble_tag))
-                    {
+                if (child != null) {
+                    if (mMobileItemId != INVALID_ID && Boolean.TRUE != child.getTag(R.id.dynamic_grid_wobble_tag)) {
                         if (i % 2 == 0)
                             animateWobble(child);
                         else
                             animateWobbleInverse(child);
                         child.setTag(R.id.dynamic_grid_wobble_tag, true);
-                    } else if (mMobileItemId == INVALID_ID && child.getRotation() != 0)
-                    {
+                    } else if (mMobileItemId == INVALID_ID && child.getRotation() != 0) {
                         child.setRotation(0);
                         child.setTag(R.id.dynamic_grid_wobble_tag, false);
                     }
@@ -918,8 +790,7 @@ public class DynamicGridView extends GridView
         }
 
         @Override
-        public void onScrollStateChanged(AbsListView view, int scrollState)
-        {
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
             mCurrentScrollState = scrollState;
             mScrollState = scrollState;
             isScrollCompleted();
@@ -933,15 +804,11 @@ public class DynamicGridView extends GridView
          * to return to its correct position after the gridview has entered an idle scroll
          * state.
          */
-        private void isScrollCompleted()
-        {
-            if (mCurrentVisibleItemCount > 0 && mCurrentScrollState == SCROLL_STATE_IDLE)
-            {
-                if (mCellIsMobile && mIsMobileScrolling)
-                {
+        private void isScrollCompleted() {
+            if (mCurrentVisibleItemCount > 0 && mCurrentScrollState == SCROLL_STATE_IDLE) {
+                if (mCellIsMobile && mIsMobileScrolling) {
                     handleMobileCellScroll();
-                } else if (mIsWaitingForScrollFinish)
-                {
+                } else if (mIsWaitingForScrollFinish) {
                     touchEventsEnded();
                 }
             }
@@ -951,12 +818,9 @@ public class DynamicGridView extends GridView
          * Determines if the gridview scrolled up enough to reveal a new cell at the
          * top of the list. If so, then the appropriate parameters are updated.
          */
-        public void checkAndHandleFirstVisibleCellChange()
-        {
-            if (mCurrentFirstVisibleItem != mPreviousFirstVisibleItem)
-            {
-                if (mCellIsMobile && mMobileItemId != INVALID_ID)
-                {
+        public void checkAndHandleFirstVisibleCellChange() {
+            if (mCurrentFirstVisibleItem != mPreviousFirstVisibleItem) {
+                if (mCellIsMobile && mMobileItemId != INVALID_ID) {
                     updateNeighborViewsForId(mMobileItemId);
                     handleCellSwitch();
                 }
@@ -967,14 +831,11 @@ public class DynamicGridView extends GridView
          * Determines if the gridview scrolled down enough to reveal a new cell at the
          * bottom of the list. If so, then the appropriate parameters are updated.
          */
-        public void checkAndHandleLastVisibleCellChange()
-        {
+        public void checkAndHandleLastVisibleCellChange() {
             int currentLastVisibleItem = mCurrentFirstVisibleItem + mCurrentVisibleItemCount;
             int previousLastVisibleItem = mPreviousFirstVisibleItem + mPreviousVisibleItemCount;
-            if (currentLastVisibleItem != previousLastVisibleItem)
-            {
-                if (mCellIsMobile && mMobileItemId != INVALID_ID)
-                {
+            if (currentLastVisibleItem != previousLastVisibleItem) {
+                if (mCellIsMobile && mMobileItemId != INVALID_ID) {
                     updateNeighborViewsForId(mMobileItemId);
                     handleCellSwitch();
                 }

@@ -88,8 +88,10 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
 
     @Override
     public void reorderItems(int originalPosition, int newPosition) {
-        DynamicGridUtils.reorder(mItems, originalPosition, newPosition);
-        notifyDataSetChanged();
+        if (newPosition < getCount()) {
+            DynamicGridUtils.reorder(mItems, originalPosition, newPosition);
+            notifyDataSetChanged();
+        }
     }
 
     public List getItems() {

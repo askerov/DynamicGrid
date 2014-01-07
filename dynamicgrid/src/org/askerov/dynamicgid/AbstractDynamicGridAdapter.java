@@ -18,7 +18,7 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
 
     /**
      * @return return columns number for GridView. Need for compatibility
-     *         (@link android.widget.GridView#getNumColumns() requires api 11)
+     * (@link android.widget.GridView#getNumColumns() requires api 11)
      */
     public abstract int getColumnCount();
 
