@@ -83,11 +83,20 @@ public class DynamicGridView extends GridView {
 
             View selectedView = getChildAt(itemNum);
             mMobileItemId = getAdapter().getItemId(position);
+
+            if (mSelectedItemBitmapCreationListener != null) {
+                mSelectedItemBitmapCreationListener.OnPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+            }
+
             mHoverCell = getAndAddHoverView(selectedView);
             if (isPostHoneycomb() && selectedView != null)
                 selectedView.setVisibility(View.INVISIBLE);
 
             mCellIsMobile = true;
+
+            if (mSelectedItemBitmapCreationListener != null) {
+                mSelectedItemBitmapCreationListener.OnPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+            }
 
             updateNeighborViewsForId(mMobileItemId);
 
@@ -118,6 +127,8 @@ public class DynamicGridView extends GridView {
     private boolean undoSupportEnabled;
     private Stack<DynamicGridModification> modificationStack;
     private DynamicGridModification currentModification;
+
+    private OnSelectedItemBitmapCreationListener mSelectedItemBitmapCreationListener;
 
 
     public DynamicGridView(Context context) {
@@ -222,6 +233,10 @@ public class DynamicGridView extends GridView {
 
     public void clearModificationHistory() {
         modificationStack.clear();
+    }
+
+    public void setOnSelectedItemBitmapCreationListener(OnSelectedItemBitmapCreationListener selectedItemBitmapCreationListener) {
+        this.mSelectedItemBitmapCreationListener = selectedItemBitmapCreationListener;
     }
 
     private void undoModification(DynamicGridModification modification) {
@@ -924,6 +939,11 @@ public class DynamicGridView extends GridView {
             }
         }
     };
+
+    public interface OnSelectedItemBitmapCreationListener {
+        public void OnPreSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+        public void OnPostSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+    }
 }
 
 class DynamicGridModification {
