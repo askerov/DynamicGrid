@@ -11,6 +11,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -21,8 +23,10 @@ import android.widget.GridView;
 import android.widget.ListAdapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * Author: alex askerov
@@ -79,13 +83,24 @@ public class DynamicGridView extends GridView {
 
             View selectedView = getChildAt(itemNum);
             mMobileItemId = getAdapter().getItemId(position);
+
+            if (mSelectedItemBitmapCreationListener != null) {
+                mSelectedItemBitmapCreationListener.OnPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+            }
+
             mHoverCell = getAndAddHoverView(selectedView);
             if (isPostHoneycomb() && selectedView != null)
                 selectedView.setVisibility(View.INVISIBLE);
 
             mCellIsMobile = true;
 
+            if (mSelectedItemBitmapCreationListener != null) {
+                mSelectedItemBitmapCreationListener.OnPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+            }
+
             updateNeighborViewsForId(mMobileItemId);
+
+            currentModification = new DynamicGridModification();
 
             if (isPostHoneycomb() && mWobbleInEditMode)
                 startWobbleAnimation();
@@ -108,6 +123,13 @@ public class DynamicGridView extends GridView {
             }
         }
     };
+
+    private boolean undoSupportEnabled;
+    private Stack<DynamicGridModification> modificationStack;
+    private DynamicGridModification currentModification;
+
+    private OnSelectedItemBitmapCreationListener mSelectedItemBitmapCreationListener;
+
 
     public DynamicGridView(Context context) {
         super(context);
@@ -164,6 +186,66 @@ public class DynamicGridView extends GridView {
         super.setOnItemClickListener(mLocalItemClickListener);
     }
 
+    public boolean isUndoSupportEnabled() {
+        return undoSupportEnabled;
+    }
+
+    public void setUndoSupportEnabled(boolean undoSupportEnabled) {
+        if (this.undoSupportEnabled != undoSupportEnabled) {
+            if (undoSupportEnabled) {
+                this.modificationStack = new Stack<DynamicGridModification>();
+            } else {
+                this.modificationStack = null;
+            }
+        }
+
+        this.undoSupportEnabled = undoSupportEnabled;
+    }
+
+    public void undoLastModification() {
+        if (undoSupportEnabled) {
+            if (modificationStack != null && !modificationStack.isEmpty()) {
+                DynamicGridModification modification = modificationStack.pop();
+                undoModification(modification);
+            }
+        }
+    }
+
+    public void undoAllModifications() {
+        if (undoSupportEnabled) {
+            if (modificationStack != null && !modificationStack.isEmpty()) {
+                while (!modificationStack.isEmpty()) {
+                    DynamicGridModification modification = modificationStack.pop();
+                    undoModification(modification);
+                }
+            }
+        }
+    }
+
+    public boolean hasModificationHistory() {
+        if (undoSupportEnabled) {
+            if (modificationStack != null && !modificationStack.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void clearModificationHistory() {
+        modificationStack.clear();
+    }
+
+    public void setOnSelectedItemBitmapCreationListener(OnSelectedItemBitmapCreationListener selectedItemBitmapCreationListener) {
+        this.mSelectedItemBitmapCreationListener = selectedItemBitmapCreationListener;
+    }
+
+    private void undoModification(DynamicGridModification modification) {
+        for (Pair<Integer, Integer> transition : modification.getTransitions()) {
+            Log.i("", "Resetting transition from "+transition.second + " to " + transition.first);
+            reorderElements(transition.second, transition.first);
+        }
+    }
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void startWobbleAnimation() {
         for (int i = 0; i < getChildCount(); i++) {
@@ -203,7 +285,6 @@ public class DynamicGridView extends GridView {
         setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int) (SMOOTH_SCROLL_AMOUNT_AT_EDGE * metrics.density + 0.5f);
-
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -376,6 +457,16 @@ public class DynamicGridView extends GridView {
                 break;
             case MotionEvent.ACTION_UP:
                 touchEventsEnded();
+
+                if (undoSupportEnabled) {
+                    if (currentModification != null && !currentModification.getTransitions().isEmpty()) {
+                        Log.i("","Adding modification with "+currentModification.getTransitions().size()+" transitions to stack!");
+
+                        modificationStack.push(currentModification);
+                        currentModification = new DynamicGridModification();
+                    }
+                }
+
                 if (mDropListener != null) {
                     mDropListener.onActionDrop();
                 }
@@ -588,6 +679,12 @@ public class DynamicGridView extends GridView {
                 return;
             }
             reorderElements(originalPosition, targetPosition);
+
+            if (undoSupportEnabled) {
+                Log.i("", "Adding transition for " + originalPosition + " ->> " + targetPosition + " into undo stack.");
+                currentModification.addTransition(originalPosition, targetPosition);
+            }
+
             mDownY = mLastEventY;
             mDownX = mLastEventX;
             mobileView.setVisibility(View.VISIBLE);
@@ -842,4 +939,32 @@ public class DynamicGridView extends GridView {
             }
         }
     };
+
+    public interface OnSelectedItemBitmapCreationListener {
+        public void OnPreSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+        public void OnPostSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+    }
+}
+
+class DynamicGridModification {
+
+    private List<Pair<Integer,Integer>> transitions;
+
+    DynamicGridModification() {
+        super();
+        this.transitions = new Stack<Pair<Integer,Integer>>();
+    }
+
+    public boolean hasTransitions() {
+        return !transitions.isEmpty();
+    }
+
+    public void addTransition(int oldPosition, int newPosition) {
+        transitions.add(new Pair<Integer, Integer>(oldPosition, newPosition));
+    }
+
+    public List<Pair<Integer,Integer>> getTransitions() {
+        Collections.reverse(transitions);
+        return transitions;
+    }
 }
