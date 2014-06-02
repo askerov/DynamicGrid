@@ -1,4 +1,4 @@
-package org.askerov.dynamicgid;
+package org.askerov.dynamicgrid;
 
 import android.animation.*;
 import android.annotation.TargetApi;
@@ -11,7 +11,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
@@ -241,7 +240,6 @@ public class DynamicGridView extends GridView {
 
     private void undoModification(DynamicGridModification modification) {
         for (Pair<Integer, Integer> transition : modification.getTransitions()) {
-            Log.i("", "Resetting transition from "+transition.second + " to " + transition.first);
             reorderElements(transition.second, transition.first);
         }
     }
@@ -460,21 +458,24 @@ public class DynamicGridView extends GridView {
 
                 if (undoSupportEnabled) {
                     if (currentModification != null && !currentModification.getTransitions().isEmpty()) {
-                        Log.i("","Adding modification with "+currentModification.getTransitions().size()+" transitions to stack!");
-
                         modificationStack.push(currentModification);
                         currentModification = new DynamicGridModification();
                     }
                 }
 
-                if (mDropListener != null) {
-                    mDropListener.onActionDrop();
+                if (mHoverCell != null) {
+                    if (mDropListener != null) {
+                        mDropListener.onActionDrop();
+                    }
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
                 touchEventsCancelled();
-                if (mDropListener != null) {
-                    mDropListener.onActionDrop();
+
+                if (mHoverCell != null) {
+                    if (mDropListener != null) {
+                        mDropListener.onActionDrop();
+                    }
                 }
                 break;
             case MotionEvent.ACTION_POINTER_UP:
@@ -681,7 +682,6 @@ public class DynamicGridView extends GridView {
             reorderElements(originalPosition, targetPosition);
 
             if (undoSupportEnabled) {
-                Log.i("", "Adding transition for " + originalPosition + " ->> " + targetPosition + " into undo stack.");
                 currentModification.addTransition(originalPosition, targetPosition);
             }
 

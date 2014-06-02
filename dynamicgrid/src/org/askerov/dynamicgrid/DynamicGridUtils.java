@@ -1,4 +1,4 @@
-package org.askerov.dynamicgid;
+package org.askerov.dynamicgrid;
 
 import android.view.View;
 
@@ -20,6 +20,20 @@ public class DynamicGridUtils {
     public static void reorder(ArrayList list, int indexFrom, int indexTwo) {
         Object obj = list.remove(indexFrom);
         list.add(indexTwo, obj);
+    }
+
+    /**
+     * Swap item in <code>list</code> at position <code>firstIndex</code> with item at position <code>secondIndex</code>
+     *
+     * @param list The list in which to swap the items.
+     * @param firstIndex The position of the first item in the list.
+     * @param secondIndex The position of the second item in the list.
+     */
+    public static void swap(ArrayList list, int firstIndex, int secondIndex) {
+        Object firstObject = list.get(firstIndex);
+        Object secondObject = list.get(secondIndex);
+        list.set(firstIndex, secondObject);
+        list.set(secondIndex, firstObject);
     }
 
     public static float getViewX(View view) {
