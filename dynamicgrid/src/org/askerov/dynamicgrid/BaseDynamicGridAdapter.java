@@ -1,4 +1,4 @@
-package org.askerov.dynamicgid;
+package org.askerov.dynamicgrid;
 
 import android.content.Context;
 
