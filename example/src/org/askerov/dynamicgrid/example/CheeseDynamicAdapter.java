@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import org.askerov.dynamicgid.BaseDynamicGridAdapter;
+import org.askerov.dynamicgrid.BaseDynamicGridAdapter;
 
 import java.util.List;
 

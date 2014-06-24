@@ -5,7 +5,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <org.askerov.dynamicgid.DynamicGridView
+    <org.askerov.dynamicgrid.DynamicGridView
             android:id="@+id/dynamic_grid"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
