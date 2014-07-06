@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.10.+'
+        classpath 'com.android.tools.build:gradle:0.11.+'
     }
 }
 
@@ -16,7 +16,7 @@ repositories {
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.2"
+    buildToolsVersion "19.1"
 
     sourceSets {
        main {
@@ -29,4 +29,8 @@ android {
                 assets.srcDirs = ['assets']
         }
     }
+
+  dependencies {
+    compile project(':dynamicgrid')
+  }
 }
