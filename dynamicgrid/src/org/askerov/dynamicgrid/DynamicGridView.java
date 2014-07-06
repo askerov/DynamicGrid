@@ -63,10 +63,12 @@ public class DynamicGridView extends GridView {
 
     private boolean mIsEditMode = false;
     private List<ObjectAnimator> mWobbleAnimators = new LinkedList<ObjectAnimator>();
-    private OnDropListener mDropListener;
     private boolean mHoverAnimation;
     private boolean mReorderAnimation;
     private boolean mWobbleInEditMode = true;
+
+    private OnDropListener mDropListener;
+    private OnDragListener mDragListener;
 
     private OnItemLongClickListener mUserLongClickListener;
     private OnItemLongClickListener mLocalLongClickListener = new OnItemLongClickListener() {
@@ -148,11 +150,23 @@ public class DynamicGridView extends GridView {
         this.mDropListener = dropListener;
     }
 
+    public void setOnDragListener(OnDragListener dragListener) {
+        this.mDragListener = dragListener;
+    }
+
     public void startEditMode() {
+        startEditMode(-1);
+
+    }
+
+    public void startEditMode(int position) {
         mIsEditMode = true;
         requestDisallowInterceptTouchEvent(true);
         if (isPostHoneycomb() && mWobbleInEditMode)
             startWobbleAnimation();
+        if (position != -1 && mDragListener != null) {
+            mDragListener.onDragStarted(position);
+        }
     }
 
     public void stopEditMode() {
@@ -317,6 +331,8 @@ public class DynamicGridView extends GridView {
 
 
     private void reorderElements(int originalPosition, int targetPosition) {
+        if (mDragListener != null)
+            mDragListener.onDragPositionsChanged(originalPosition, targetPosition);
         getAdapterInterface().reorderItems(originalPosition, targetPosition);
     }
 
@@ -424,6 +440,9 @@ public class DynamicGridView extends GridView {
                             selectedView.setVisibility(View.INVISIBLE);
                         mCellIsMobile = true;
                         updateNeighborViewsForId(mMobileItemId);
+                        if (mDragListener != null) {
+                            mDragListener.onDragStarted(position);
+                        }
                     }
                 } else if (!isEnabled()) {
                     return false;
@@ -450,7 +469,6 @@ public class DynamicGridView extends GridView {
                     handleCellSwitch();
                     mIsMobileScrolling = false;
                     handleMobileCellScroll();
-
                     return false;
                 }
 
@@ -826,15 +844,20 @@ public class DynamicGridView extends GridView {
         }
     }
 
-    /**
-     * Interface provide callback for end of drag'n'drop event
-     */
+
     public interface OnDropListener {
         /**
          * called when view been dropped
          */
         void onActionDrop();
 
+    }
+
+    public interface OnDragListener {
+
+        public void onDragStarted(int position);
+
+        public void onDragPositionsChanged(int oldPosition, int newPosition);
     }
 
 

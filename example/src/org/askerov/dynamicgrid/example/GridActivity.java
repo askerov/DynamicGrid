@@ -2,6 +2,7 @@ package org.askerov.dynamicgrid.example;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Toast;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class GridActivity extends Activity {
+
+    private static final String TAG = GridActivity.class.getName();
 
     private DynamicGridView gridView;
 
@@ -31,10 +34,21 @@ public class GridActivity extends Activity {
 //                gridView.stopEditMode();
 //            }
 //        });
+        gridView.setOnDragListener(new DynamicGridView.OnDragListener() {
+            @Override
+            public void onDragStarted(int position) {
+                Log.d(TAG, "drag started at position " + position);
+            }
+
+            @Override
+            public void onDragPositionsChanged(int oldPosition, int newPosition) {
+                Log.d(TAG, String.format("drag item position changed from %d to %d", oldPosition, newPosition));
+            }
+        });
         gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                gridView.startEditMode();
+                gridView.startEditMode(position);
                 return false;
             }
         });
