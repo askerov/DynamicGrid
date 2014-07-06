@@ -14,8 +14,3 @@ allprojects {
         mavenCentral()
     }
 }
-
-subprojects {
-  group = 'org.askerov.dynamicgrid'
-  version = '1.0'
-}

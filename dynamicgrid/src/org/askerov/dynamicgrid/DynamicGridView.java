@@ -150,12 +150,14 @@ public class DynamicGridView extends GridView {
 
     public void startEditMode() {
         mIsEditMode = true;
+        requestDisallowInterceptTouchEvent(true);
         if (isPostHoneycomb() && mWobbleInEditMode)
             startWobbleAnimation();
     }
 
     public void stopEditMode() {
         mIsEditMode = false;
+        requestDisallowInterceptTouchEvent(false);
         if (isPostHoneycomb() && mWobbleInEditMode)
             stopWobble(true);
     }

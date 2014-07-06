@@ -11,26 +11,29 @@ buildscript {
 apply plugin: 'android'
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
+dependencies {
+    compile 'com.android.support:support-v4:19.+'
+}
 android {
     compileSdkVersion 19
     buildToolsVersion "19.1"
 
     sourceSets {
-       main {
-                manifest.srcFile 'AndroidManifest.xml'
-                java.srcDirs = ['src']
-                resources.srcDirs = ['src']
-                aidl.srcDirs = ['src']
-                renderscript.srcDirs = ['src']
-                res.srcDirs = ['res']
-                assets.srcDirs = ['assets']
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            resources.srcDirs = ['src']
+            aidl.srcDirs = ['src']
+            renderscript.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
         }
     }
 
-  dependencies {
-    compile project(':dynamicgrid')
-  }
+    dependencies {
+        compile project(':dynamicgrid')
+    }
 }
