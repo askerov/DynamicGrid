@@ -549,7 +549,7 @@ public class DynamicGridView extends GridView {
 
     private void touchEventsEnded() {
         final View mobileView = getViewForId(mMobileItemId);
-        if (mCellIsMobile || mIsWaitingForScrollFinish) {
+        if (mobileView != null && (mCellIsMobile || mIsWaitingForScrollFinish)) {
             mCellIsMobile = false;
             mIsWaitingForScrollFinish = false;
             mIsMobileScrolling = false;
