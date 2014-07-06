@@ -99,7 +99,7 @@ public class DynamicGridView extends GridView {
 
             updateNeighborViewsForId(mMobileItemId);
 
-            currentModification = new DynamicGridModification();
+            mCurrentModification = new DynamicGridModification();
 
             if (isPostHoneycomb() && mWobbleInEditMode)
                 startWobbleAnimation();
@@ -123,9 +123,9 @@ public class DynamicGridView extends GridView {
         }
     };
 
-    private boolean undoSupportEnabled;
-    private Stack<DynamicGridModification> modificationStack;
-    private DynamicGridModification currentModification;
+    private boolean mUndoSupportEnabled;
+    private Stack<DynamicGridModification> mModificationStack;
+    private DynamicGridModification mCurrentModification;
 
     private OnSelectedItemBitmapCreationListener mSelectedItemBitmapCreationListener;
 
@@ -186,35 +186,35 @@ public class DynamicGridView extends GridView {
     }
 
     public boolean isUndoSupportEnabled() {
-        return undoSupportEnabled;
+        return mUndoSupportEnabled;
     }
 
     public void setUndoSupportEnabled(boolean undoSupportEnabled) {
-        if (this.undoSupportEnabled != undoSupportEnabled) {
+        if (this.mUndoSupportEnabled != undoSupportEnabled) {
             if (undoSupportEnabled) {
-                this.modificationStack = new Stack<DynamicGridModification>();
+                this.mModificationStack = new Stack<DynamicGridModification>();
             } else {
-                this.modificationStack = null;
+                this.mModificationStack = null;
             }
         }
 
-        this.undoSupportEnabled = undoSupportEnabled;
+        this.mUndoSupportEnabled = undoSupportEnabled;
     }
 
     public void undoLastModification() {
-        if (undoSupportEnabled) {
-            if (modificationStack != null && !modificationStack.isEmpty()) {
-                DynamicGridModification modification = modificationStack.pop();
+        if (mUndoSupportEnabled) {
+            if (mModificationStack != null && !mModificationStack.isEmpty()) {
+                DynamicGridModification modification = mModificationStack.pop();
                 undoModification(modification);
             }
         }
     }
 
     public void undoAllModifications() {
-        if (undoSupportEnabled) {
-            if (modificationStack != null && !modificationStack.isEmpty()) {
-                while (!modificationStack.isEmpty()) {
-                    DynamicGridModification modification = modificationStack.pop();
+        if (mUndoSupportEnabled) {
+            if (mModificationStack != null && !mModificationStack.isEmpty()) {
+                while (!mModificationStack.isEmpty()) {
+                    DynamicGridModification modification = mModificationStack.pop();
                     undoModification(modification);
                 }
             }
@@ -222,8 +222,8 @@ public class DynamicGridView extends GridView {
     }
 
     public boolean hasModificationHistory() {
-        if (undoSupportEnabled) {
-            if (modificationStack != null && !modificationStack.isEmpty()) {
+        if (mUndoSupportEnabled) {
+            if (mModificationStack != null && !mModificationStack.isEmpty()) {
                 return true;
             }
         }
@@ -231,7 +231,7 @@ public class DynamicGridView extends GridView {
     }
 
     public void clearModificationHistory() {
-        modificationStack.clear();
+        mModificationStack.clear();
     }
 
     public void setOnSelectedItemBitmapCreationListener(OnSelectedItemBitmapCreationListener selectedItemBitmapCreationListener) {
@@ -456,10 +456,10 @@ public class DynamicGridView extends GridView {
             case MotionEvent.ACTION_UP:
                 touchEventsEnded();
 
-                if (undoSupportEnabled) {
-                    if (currentModification != null && !currentModification.getTransitions().isEmpty()) {
-                        modificationStack.push(currentModification);
-                        currentModification = new DynamicGridModification();
+                if (mUndoSupportEnabled) {
+                    if (mCurrentModification != null && !mCurrentModification.getTransitions().isEmpty()) {
+                        mModificationStack.push(mCurrentModification);
+                        mCurrentModification = new DynamicGridModification();
                     }
                 }
 
@@ -681,8 +681,8 @@ public class DynamicGridView extends GridView {
             }
             reorderElements(originalPosition, targetPosition);
 
-            if (undoSupportEnabled) {
-                currentModification.addTransition(originalPosition, targetPosition);
+            if (mUndoSupportEnabled) {
+                mCurrentModification.addTransition(originalPosition, targetPosition);
             }
 
             mDownY = mLastEventY;
