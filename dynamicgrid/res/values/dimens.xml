@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dgv_overlap_if_switch_straight_line">16dp</dimen>
+</resources>

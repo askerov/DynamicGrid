@@ -21,11 +21,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Author: alex askerov
@@ -49,6 +45,9 @@ public class DynamicGridView extends GridView {
     private int mDownY = -1;
     private int mLastEventY = -1;
     private int mLastEventX = -1;
+
+    //used to distinguish straight line and diagonal switching
+    private int mOverlapIfSwitchStraightLine;
 
     private List<Long> idList = new ArrayList<Long>();
 
@@ -84,7 +83,7 @@ public class DynamicGridView extends GridView {
             mMobileItemId = getAdapter().getItemId(position);
 
             if (mSelectedItemBitmapCreationListener != null) {
-                mSelectedItemBitmapCreationListener.OnPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+                mSelectedItemBitmapCreationListener.onPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
             }
 
             mHoverCell = getAndAddHoverView(selectedView);
@@ -94,7 +93,7 @@ public class DynamicGridView extends GridView {
             mCellIsMobile = true;
 
             if (mSelectedItemBitmapCreationListener != null) {
-                mSelectedItemBitmapCreationListener.OnPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+                mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
             }
 
             updateNeighborViewsForId(mMobileItemId);
@@ -248,12 +247,12 @@ public class DynamicGridView extends GridView {
     private void startWobbleAnimation() {
         for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
-            if (v != null && Boolean.TRUE != v.getTag(R.id.dynamic_grid_wobble_tag)) {
+            if (v != null && Boolean.TRUE != v.getTag(R.id.dgv_wobble_tag)) {
                 if (i % 2 == 0)
                     animateWobble(v);
                 else
                     animateWobbleInverse(v);
-                v.setTag(R.id.dynamic_grid_wobble_tag, true);
+                v.setTag(R.id.dgv_wobble_tag, true);
             }
         }
     }
@@ -268,7 +267,7 @@ public class DynamicGridView extends GridView {
             View v = getChildAt(i);
             if (v != null) {
                 if (resetRotation) v.setRotation(0);
-                v.setTag(R.id.dynamic_grid_wobble_tag, false);
+                v.setTag(R.id.dgv_wobble_tag, false);
             }
         }
     }
@@ -283,6 +282,7 @@ public class DynamicGridView extends GridView {
         setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int) (SMOOTH_SCROLL_AMOUNT_AT_EDGE * metrics.density + 0.5f);
+        mOverlapIfSwitchStraightLine = getResources().getDimensionPixelSize(R.dimen.dgv_overlap_if_switch_straight_line);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -657,10 +657,14 @@ public class DynamicGridView extends GridView {
                         && deltaYTotal > view.getTop() && deltaXTotal > view.getLeft()
                         || belowLeft(targetColumnRowPair, mobileColumnRowPair)
                         && deltaYTotal > view.getTop() && deltaXTotal < view.getRight()
-                        || above(targetColumnRowPair, mobileColumnRowPair) && deltaYTotal < view.getBottom())
-                        || below(targetColumnRowPair, mobileColumnRowPair) && deltaYTotal > view.getTop()
-                        || right(targetColumnRowPair, mobileColumnRowPair) && deltaXTotal > view.getLeft()
-                        || left(targetColumnRowPair, mobileColumnRowPair) && deltaXTotal < view.getRight()) {
+                        || above(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaYTotal < view.getBottom() - mOverlapIfSwitchStraightLine
+                        || below(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaYTotal > view.getTop() + mOverlapIfSwitchStraightLine
+                        || right(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaXTotal > view.getLeft() + mOverlapIfSwitchStraightLine
+                        || left(targetColumnRowPair, mobileColumnRowPair)
+                        && deltaXTotal < view.getRight() - mOverlapIfSwitchStraightLine)) {
                     float xDiff = Math.abs(DynamicGridUtils.getViewX(view) - DynamicGridUtils.getViewX(mobileView));
                     float yDiff = Math.abs(DynamicGridUtils.getViewY(view) - DynamicGridUtils.getViewY(mobileView));
                     if (xDiff >= vX && yDiff >= vY) {
@@ -764,7 +768,8 @@ public class DynamicGridView extends GridView {
             for (int pos = Math.min(oldPosition, newPosition); pos < Math.max(oldPosition, newPosition); pos++) {
                 View view = getViewForId(getId(pos));
                 if ((pos + 1) % getColumnCount() == 0) {
-                    resultList.add(createTranslationAnimations(view, -view.getWidth() * (getColumnCount() - 1), 0, view.getHeight(), 0));
+                    resultList.add(createTranslationAnimations(view, -view.getWidth() * (getColumnCount() - 1), 0,
+                            view.getHeight(), 0));
                 } else {
                     resultList.add(createTranslationAnimations(view, view.getWidth(), 0, 0, 0));
                 }
@@ -773,7 +778,8 @@ public class DynamicGridView extends GridView {
             for (int pos = Math.max(oldPosition, newPosition); pos > Math.min(oldPosition, newPosition); pos--) {
                 View view = getViewForId(getId(pos));
                 if ((pos + getColumnCount()) % getColumnCount() == 0) {
-                    resultList.add(createTranslationAnimations(view, view.getWidth() * (getColumnCount() - 1), 0, -view.getHeight(), 0));
+                    resultList.add(createTranslationAnimations(view, view.getWidth() * (getColumnCount() - 1), 0,
+                            -view.getHeight(), 0));
                 } else {
                     resultList.add(createTranslationAnimations(view, -view.getWidth(), 0, 0, 0));
                 }
@@ -871,15 +877,15 @@ public class DynamicGridView extends GridView {
                 View child = getChildAt(i);
 
                 if (child != null) {
-                    if (mMobileItemId != INVALID_ID && Boolean.TRUE != child.getTag(R.id.dynamic_grid_wobble_tag)) {
+                    if (mMobileItemId != INVALID_ID && Boolean.TRUE != child.getTag(R.id.dgv_wobble_tag)) {
                         if (i % 2 == 0)
                             animateWobble(child);
                         else
                             animateWobbleInverse(child);
-                        child.setTag(R.id.dynamic_grid_wobble_tag, true);
+                        child.setTag(R.id.dgv_wobble_tag, true);
                     } else if (mMobileItemId == INVALID_ID && child.getRotation() != 0) {
                         child.setRotation(0);
-                        child.setTag(R.id.dynamic_grid_wobble_tag, false);
+                        child.setTag(R.id.dgv_wobble_tag, false);
                     }
                 }
 
@@ -941,18 +947,19 @@ public class DynamicGridView extends GridView {
     };
 
     public interface OnSelectedItemBitmapCreationListener {
-        public void OnPreSelectedItemBitmapCreation(View selectedView, int position, long itemId);
-        public void OnPostSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+        public void onPreSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+
+        public void onPostSelectedItemBitmapCreation(View selectedView, int position, long itemId);
     }
 }
 
 class DynamicGridModification {
 
-    private List<Pair<Integer,Integer>> transitions;
+    private List<Pair<Integer, Integer>> transitions;
 
     DynamicGridModification() {
         super();
-        this.transitions = new Stack<Pair<Integer,Integer>>();
+        this.transitions = new Stack<Pair<Integer, Integer>>();
     }
 
     public boolean hasTransitions() {
@@ -963,7 +970,7 @@ class DynamicGridModification {
         transitions.add(new Pair<Integer, Integer>(oldPosition, newPosition));
     }
 
-    public List<Pair<Integer,Integer>> getTransitions() {
+    public List<Pair<Integer, Integer>> getTransitions() {
         Collections.reverse(transitions);
         return transitions;
     }
