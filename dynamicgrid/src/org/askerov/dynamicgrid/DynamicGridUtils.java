@@ -12,26 +12,28 @@ import java.util.ArrayList;
 public class DynamicGridUtils {
     /**
      * Delete item in <code>list</code> from position <code>indexFrom</code> and insert it to <code>indexTwo</code>
+     * @param <T>
      *
      * @param list
      * @param indexFrom
      * @param indexTwo
      */
-    public static void reorder(ArrayList list, int indexFrom, int indexTwo) {
-        Object obj = list.remove(indexFrom);
+    public static <T> void reorder(ArrayList<T> list, int indexFrom, int indexTwo) {
+        T obj = list.remove(indexFrom);
         list.add(indexTwo, obj);
     }
 
     /**
      * Swap item in <code>list</code> at position <code>firstIndex</code> with item at position <code>secondIndex</code>
+     * @param <T>
      *
      * @param list The list in which to swap the items.
      * @param firstIndex The position of the first item in the list.
      * @param secondIndex The position of the second item in the list.
      */
-    public static void swap(ArrayList list, int firstIndex, int secondIndex) {
-        Object firstObject = list.get(firstIndex);
-        Object secondObject = list.get(secondIndex);
+    public static <T> void swap(ArrayList<T> list, int firstIndex, int secondIndex) {
+        T firstObject = list.get(firstIndex);
+        T secondObject = list.get(secondIndex);
         list.set(firstIndex, secondObject);
         list.set(secondIndex, firstObject);
     }

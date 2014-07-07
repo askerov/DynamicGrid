@@ -188,6 +188,15 @@ public class DynamicGridView extends GridView {
         this.mWobbleInEditMode = wobbleInEditMode;
     }
 
+    protected Object getMobileItem() {
+    	for(Map.Entry<Object, Integer> entry : getAdapterInterface().mIdMap.entrySet()) {
+    		if (entry.getValue() == mMobileItemId) {
+    			return entry.getKey();
+    		}
+    	}
+    	return null;
+    }
+    
     @Override
     public void setOnItemLongClickListener(final OnItemLongClickListener listener) {
         mUserLongClickListener = listener;
