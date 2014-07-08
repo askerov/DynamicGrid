@@ -13,8 +13,9 @@ import java.util.List;
 public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
     public static final int INVALID_ID = -1;
 
-
-    private HashMap<Object, Integer> mIdMap = new HashMap<Object, Integer>();
+    private int nextStableId = 0;
+    
+    protected HashMap<Object, Integer> mIdMap = new HashMap<Object, Integer>();
 
     /**
      * @return return columns number for GridView. Need for compatibility
@@ -46,9 +47,7 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
      * @param item
      */
     protected void addStableId(Object item) {
-        int newId = (int) getItemId(getCount() - 1);
-        newId++;
-        mIdMap.put(item, newId);
+        mIdMap.put(item, nextStableId++);
     }
 
     /**
