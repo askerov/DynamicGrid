@@ -2,6 +2,8 @@ package org.askerov.dynamicgrid;
 
 import android.widget.BaseAdapter;
 
+import org.askerov.dynamicgrid.interfaces.DynamicGridViewAdapterInterface;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import java.util.List;
  * Date: 9/6/13
  * Time: 7:43 PM
  */
-public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
+public abstract class AbstractDynamicGridAdapter extends BaseAdapter implements DynamicGridViewAdapterInterface {
     public static final int INVALID_ID = -1;
 
     private int nextStableId = 0;
@@ -21,6 +23,7 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
      * @return return columns number for GridView. Need for compatibility
      * (@link android.widget.GridView#getNumColumns() requires api 11)
      */
+    @Override
     public abstract int getColumnCount();
 
     /**
@@ -29,6 +32,7 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
      * @param originalPosition
      * @param newPosition
      */
+    @Override
     public abstract void reorderItems(int originalPosition, int newPosition);
 
     /**
