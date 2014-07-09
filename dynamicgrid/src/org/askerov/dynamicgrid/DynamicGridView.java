@@ -81,13 +81,7 @@ public class DynamicGridView extends GridView {
     private OnItemLongClickListener mUserLongClickListener;
     private OnItemLongClickListener mLocalLongClickListener = new OnItemLongClickListener() {
         public boolean onItemLongClick(AdapterView<?> adapter, View clickedView, int pos, long itemId) {
-
-          System.out.println("mEditableModeEnabled = " + mEditableModeEnabled);
-          System.out.println("isEnabled() = " + isEnabled());
-          System.out.println("mIsEditMode = " + isEditMode());
-          boolean b = !mEditableModeEnabled || (!isEnabled() || isEditMode());
-          System.out.println("b = " + b);
-          if (b)
+          if (!mEditableModeEnabled || (!isEnabled() || isEditMode()))
                 return false;
             mTotalOffsetY = 0;
             mTotalOffsetX = 0;
