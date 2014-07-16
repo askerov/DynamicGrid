@@ -21,6 +21,8 @@ local.properties
 
 *.iml
 
+**/build
+
 dynamicgrid/.idea/workspace.xml
 
 dynamicgrid/.idea/

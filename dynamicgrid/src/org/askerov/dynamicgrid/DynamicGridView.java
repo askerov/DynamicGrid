@@ -17,9 +17,14 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AbsListView;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
+
+import org.askerov.dynamicgrid.interfaces.ColumnarAdapter;
+import org.askerov.dynamicgrid.interfaces.OnEditModeChangeListener;
+import org.askerov.dynamicgrid.interfaces.ReorderableAdapter;
 
 import java.util.*;
 
@@ -66,14 +71,17 @@ public class DynamicGridView extends GridView {
     private boolean mHoverAnimation;
     private boolean mReorderAnimation;
     private boolean mWobbleInEditMode = true;
+    private boolean mEditableModeEnabled = true;
+
+    private OnEditModeChangeListener mEditModeChangeListener;
 
     private OnDropListener mDropListener;
     private OnDragListener mDragListener;
 
     private OnItemLongClickListener mUserLongClickListener;
     private OnItemLongClickListener mLocalLongClickListener = new OnItemLongClickListener() {
-        public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
-            if (!isEnabled() || isEditMode())
+        public boolean onItemLongClick(AdapterView<?> adapter, View clickedView, int pos, long itemId) {
+          if (!mEditableModeEnabled || (!isEnabled() || isEditMode()))
                 return false;
             mTotalOffsetY = 0;
             mTotalOffsetX = 0;
@@ -106,7 +114,7 @@ public class DynamicGridView extends GridView {
                 startWobbleAnimation();
 
             if (mUserLongClickListener != null)
-                mUserLongClickListener.onItemLongClick(arg0, arg1, pos, id);
+                mUserLongClickListener.onItemLongClick(adapter, clickedView, pos, itemId);
 
             mIsEditMode = true;
 
@@ -156,10 +164,10 @@ public class DynamicGridView extends GridView {
 
     public void startEditMode() {
         startEditMode(-1);
-
     }
 
     public void startEditMode(int position) {
+      if (mEditableModeEnabled) {
         mIsEditMode = true;
         requestDisallowInterceptTouchEvent(true);
         if (isPostHoneycomb() && mWobbleInEditMode)
@@ -167,6 +175,10 @@ public class DynamicGridView extends GridView {
         if (position != -1 && mDragListener != null) {
             mDragListener.onDragStarted(position);
         }
+        if(mEditModeChangeListener != null) {
+          mEditModeChangeListener.onEditModeChanged(mIsEditMode);
+        }
+      }
     }
 
     public void stopEditMode() {
@@ -174,6 +186,13 @@ public class DynamicGridView extends GridView {
         requestDisallowInterceptTouchEvent(false);
         if (isPostHoneycomb() && mWobbleInEditMode)
             stopWobble(true);
+        if(mEditModeChangeListener != null) {
+          mEditModeChangeListener.onEditModeChanged(mIsEditMode);
+        }
+    }
+
+    public void setEditableModeEnabled(boolean editableModeEnabled) {
+        this.mEditableModeEnabled = editableModeEnabled;
     }
 
     public boolean isEditMode() {
@@ -188,25 +207,14 @@ public class DynamicGridView extends GridView {
         this.mWobbleInEditMode = wobbleInEditMode;
     }
 
-    protected Object getMobileItem() {
-    	for(Map.Entry<Object, Integer> entry : getAdapterInterface().mIdMap.entrySet()) {
-    		if (entry.getValue() == mMobileItemId) {
-    			return entry.getKey();
-    		}
-    	}
-    	return null;
-    }
-    
     @Override
     public void setOnItemLongClickListener(final OnItemLongClickListener listener) {
         mUserLongClickListener = listener;
-        super.setOnItemLongClickListener(mLocalLongClickListener);
     }
 
     @Override
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.mUserItemClickListener = listener;
-        super.setOnItemClickListener(mLocalItemClickListener);
     }
 
     public boolean isUndoSupportEnabled() {
@@ -262,6 +270,10 @@ public class DynamicGridView extends GridView {
         this.mSelectedItemBitmapCreationListener = selectedItemBitmapCreationListener;
     }
 
+    public void setOnEditModeChangeListener(OnEditModeChangeListener onEditModeChangeListener) {
+        this.mEditModeChangeListener = onEditModeChangeListener;
+    }
+
     private void undoModification(DynamicGridModification modification) {
         for (Pair<Integer, Integer> transition : modification.getTransitions()) {
             reorderElements(transition.second, transition.first);
@@ -308,6 +320,10 @@ public class DynamicGridView extends GridView {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int) (SMOOTH_SCROLL_AMOUNT_AT_EDGE * metrics.density + 0.5f);
         mOverlapIfSwitchStraightLine = getResources().getDimensionPixelSize(R.dimen.dgv_overlap_if_switch_straight_line);
+
+        // do the default behavior even if the user doesn't want their own.
+        super.setOnItemLongClickListener(mLocalLongClickListener);
+        super.setOnItemClickListener(mLocalItemClickListener);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -341,16 +357,20 @@ public class DynamicGridView extends GridView {
 
     private void reorderElements(int originalPosition, int targetPosition) {
         if (mDragListener != null)
-            mDragListener.onDragPositionsChanged(originalPosition, targetPosition);
-        getAdapterInterface().reorderItems(originalPosition, targetPosition);
+          mDragListener.onDragPositionsChanged(originalPosition, targetPosition);
+        getReorderableAdapter().reorderItems(originalPosition, targetPosition);
     }
 
     private int getColumnCount() {
-        return getAdapterInterface().getColumnCount();
+        return getColumnarAdapter().getColumnCount();
     }
 
-    private AbstractDynamicGridAdapter getAdapterInterface() {
-        return ((AbstractDynamicGridAdapter) getAdapter());
+    private ReorderableAdapter getReorderableAdapter() {
+        return ((ReorderableAdapter) getAdapter());
+    }
+
+    private ColumnarAdapter getColumnarAdapter() {
+        return ((ColumnarAdapter) getAdapter());
     }
 
     /**
@@ -411,7 +431,7 @@ public class DynamicGridView extends GridView {
 
     public View getViewForId(long itemId) {
         int firstVisiblePosition = getFirstVisiblePosition();
-        AbstractDynamicGridAdapter adapter = ((AbstractDynamicGridAdapter) getAdapter());
+        Adapter adapter = getAdapter();
         for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
             int position = firstVisiblePosition + i;
@@ -852,7 +872,6 @@ public class DynamicGridView extends GridView {
             mHoverCell.draw(canvas);
         }
     }
-
 
     public interface OnDropListener {
         /**
