@@ -10,25 +10,16 @@ import java.util.List;
  * Date: 9/6/13
  * Time: 7:43 PM
  */
-public abstract class AbstractDynamicGridAdapter extends BaseAdapter {
+
+/**
+ * Abstract adapter for {@link org.askerov.dynamicgrid.DynamicGridView} with sable items id;
+ */
+
+public abstract class AbstractDynamicGridAdapter extends BaseAdapter implements DynamicGridAdapterInterface {
     public static final int INVALID_ID = -1;
 
 
     private HashMap<Object, Integer> mIdMap = new HashMap<Object, Integer>();
-
-    /**
-     * @return return columns number for GridView. Need for compatibility
-     * (@link android.widget.GridView#getNumColumns() requires api 11)
-     */
-    public abstract int getColumnCount();
-
-    /**
-     * Determines how to reorder items dragged from <code>originalPosition</code> to <code>newPosition</code>
-     *
-     * @param originalPosition
-     * @param newPosition
-     */
-    public abstract void reorderItems(int originalPosition, int newPosition);
 
     /**
      * Adapter must have stable id

@@ -24,7 +24,7 @@ public class GridActivity extends Activity {
         gridView = (DynamicGridView) findViewById(R.id.dynamic_grid);
         gridView.setAdapter(new CheeseDynamicAdapter(this,
                 new ArrayList<String>(Arrays.asList(Cheeses.sCheeseStrings)),
-                3));
+                getResources().getInteger(R.integer.column_count)));
 //        add callback to stop edit mode if needed
 //        gridView.setOnDropListener(new DynamicGridView.OnDropListener()
 //        {
@@ -49,7 +49,7 @@ public class GridActivity extends Activity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 gridView.startEditMode(position);
-                return false;
+                return true;
             }
         });
 

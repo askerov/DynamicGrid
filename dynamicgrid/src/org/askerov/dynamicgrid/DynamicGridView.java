@@ -29,7 +29,7 @@ import java.util.*;
  * Time: 12:31 PM
  */
 public class DynamicGridView extends GridView {
-    private static final int INVALID_ID = AbstractDynamicGridAdapter.INVALID_ID;
+    private static final int INVALID_ID = -1;
 
     private static final int MOVE_DURATION = 300;
     private static final int SMOOTH_SCROLL_AMOUNT_AT_EDGE = 8;
@@ -66,53 +66,11 @@ public class DynamicGridView extends GridView {
     private boolean mHoverAnimation;
     private boolean mReorderAnimation;
     private boolean mWobbleInEditMode = true;
+    private boolean mIsEditModeEnabled = true;
 
     private OnDropListener mDropListener;
     private OnDragListener mDragListener;
-
-    private OnItemLongClickListener mUserLongClickListener;
-    private OnItemLongClickListener mLocalLongClickListener = new OnItemLongClickListener() {
-        public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
-            if (!isEnabled() || isEditMode())
-                return false;
-            mTotalOffsetY = 0;
-            mTotalOffsetX = 0;
-
-            int position = pointToPosition(mDownX, mDownY);
-            int itemNum = position - getFirstVisiblePosition();
-
-            View selectedView = getChildAt(itemNum);
-            mMobileItemId = getAdapter().getItemId(position);
-
-            if (mSelectedItemBitmapCreationListener != null) {
-                mSelectedItemBitmapCreationListener.onPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
-            }
-
-            mHoverCell = getAndAddHoverView(selectedView);
-            if (isPostHoneycomb() && selectedView != null)
-                selectedView.setVisibility(View.INVISIBLE);
-
-            mCellIsMobile = true;
-
-            if (mSelectedItemBitmapCreationListener != null) {
-                mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
-            }
-
-            updateNeighborViewsForId(mMobileItemId);
-
-            mCurrentModification = new DynamicGridModification();
-
-            if (isPostHoneycomb() && mWobbleInEditMode)
-                startWobbleAnimation();
-
-            if (mUserLongClickListener != null)
-                mUserLongClickListener.onItemLongClick(arg0, arg1, pos, id);
-
-            mIsEditMode = true;
-
-            return true;
-        }
-    };
+    private OnEditModeChangeListener mEditModeChangeListener;
 
     private OnItemClickListener mUserItemClickListener;
     private OnItemClickListener mLocalItemClickListener = new OnItemClickListener() {
@@ -154,19 +112,30 @@ public class DynamicGridView extends GridView {
         this.mDragListener = dragListener;
     }
 
+    /**
+     * Start edit mode without starting drag;
+     */
     public void startEditMode() {
         startEditMode(-1);
-
     }
 
+    /**
+     * Start edit mode with position. Useful for start edit mode in
+     * {@link android.widget.AdapterView.OnItemClickListener}
+     * or {@link android.widget.AdapterView.OnItemLongClickListener}
+     */
     public void startEditMode(int position) {
-        mIsEditMode = true;
+        if (!mIsEditModeEnabled)
+            return;
         requestDisallowInterceptTouchEvent(true);
         if (isPostHoneycomb() && mWobbleInEditMode)
             startWobbleAnimation();
         if (position != -1 && mDragListener != null) {
-            mDragListener.onDragStarted(position);
+            startDragAtPosition(position);
         }
+        mIsEditMode = true;
+        if (mEditModeChangeListener != null)
+            mEditModeChangeListener.onEditModeChanged(true);
     }
 
     public void stopEditMode() {
@@ -174,6 +143,20 @@ public class DynamicGridView extends GridView {
         requestDisallowInterceptTouchEvent(false);
         if (isPostHoneycomb() && mWobbleInEditMode)
             stopWobble(true);
+        if (mEditModeChangeListener != null)
+            mEditModeChangeListener.onEditModeChanged(false);
+    }
+
+    public boolean isEditModeEnabled() {
+        return mIsEditModeEnabled;
+    }
+
+    public void setEditModeEnabled(boolean enabled) {
+        this.mIsEditModeEnabled = enabled;
+    }
+
+    public void setOnEditModeChangeListener(OnEditModeChangeListener editModeChangeListener) {
+        this.mEditModeChangeListener = editModeChangeListener;
     }
 
     public boolean isEditMode() {
@@ -188,11 +171,6 @@ public class DynamicGridView extends GridView {
         this.mWobbleInEditMode = wobbleInEditMode;
     }
 
-    @Override
-    public void setOnItemLongClickListener(final OnItemLongClickListener listener) {
-        mUserLongClickListener = listener;
-        super.setOnItemLongClickListener(mLocalLongClickListener);
-    }
 
     @Override
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -340,8 +318,8 @@ public class DynamicGridView extends GridView {
         return getAdapterInterface().getColumnCount();
     }
 
-    private AbstractDynamicGridAdapter getAdapterInterface() {
-        return ((AbstractDynamicGridAdapter) getAdapter());
+    private DynamicGridAdapterInterface getAdapterInterface() {
+        return ((DynamicGridAdapterInterface) getAdapter());
     }
 
     /**
@@ -402,7 +380,7 @@ public class DynamicGridView extends GridView {
 
     public View getViewForId(long itemId) {
         int firstVisiblePosition = getFirstVisiblePosition();
-        AbstractDynamicGridAdapter adapter = ((AbstractDynamicGridAdapter) getAdapter());
+        ListAdapter adapter = getAdapter();
         for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
             int position = firstVisiblePosition + i;
@@ -424,26 +402,8 @@ public class DynamicGridView extends GridView {
 
                 if (mIsEditMode && isEnabled()) {
                     layoutChildren();
-
-                    mTotalOffsetY = 0;
-                    mTotalOffsetX = 0;
-
                     int position = pointToPosition(mDownX, mDownY);
-                    int itemNum = position - getFirstVisiblePosition();
-                    View selectedView = getChildAt(itemNum);
-                    if (selectedView == null) {
-                        return false;
-                    } else {
-                        mMobileItemId = getAdapter().getItemId(position);
-                        mHoverCell = getAndAddHoverView(selectedView);
-                        if (isPostHoneycomb())
-                            selectedView.setVisibility(View.INVISIBLE);
-                        mCellIsMobile = true;
-                        updateNeighborViewsForId(mMobileItemId);
-                        if (mDragListener != null) {
-                            mDragListener.onDragStarted(position);
-                        }
-                    }
+                    startDragAtPosition(position);
                 } else if (!isEnabled()) {
                     return false;
                 }
@@ -515,6 +475,28 @@ public class DynamicGridView extends GridView {
         }
 
         return super.onTouchEvent(event);
+    }
+
+    private void startDragAtPosition(int position) {
+        mTotalOffsetY = 0;
+        mTotalOffsetX = 0;
+        int itemNum = position - getFirstVisiblePosition();
+        View selectedView = getChildAt(itemNum);
+        if (selectedView != null) {
+            mMobileItemId = getAdapter().getItemId(position);
+            if (mSelectedItemBitmapCreationListener != null)
+                mSelectedItemBitmapCreationListener.onPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+            mHoverCell = getAndAddHoverView(selectedView);
+            if (mSelectedItemBitmapCreationListener != null)
+                mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+            if (isPostHoneycomb())
+                selectedView.setVisibility(View.INVISIBLE);
+            mCellIsMobile = true;
+            updateNeighborViewsForId(mMobileItemId);
+            if (mDragListener != null) {
+                mDragListener.onDragStarted(position);
+            }
+        }
     }
 
     private void handleMobileCellScroll() {
@@ -846,11 +828,7 @@ public class DynamicGridView extends GridView {
 
 
     public interface OnDropListener {
-        /**
-         * called when view been dropped
-         */
         void onActionDrop();
-
     }
 
     public interface OnDragListener {
@@ -858,6 +836,16 @@ public class DynamicGridView extends GridView {
         public void onDragStarted(int position);
 
         public void onDragPositionsChanged(int oldPosition, int newPosition);
+    }
+
+    public interface OnEditModeChangeListener {
+        public void onEditModeChanged(boolean inEditMode);
+    }
+
+    public interface OnSelectedItemBitmapCreationListener {
+        public void onPreSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+
+        public void onPostSelectedItemBitmapCreation(View selectedView, int position, long itemId);
     }
 
 
@@ -971,32 +959,27 @@ public class DynamicGridView extends GridView {
         }
     };
 
-    public interface OnSelectedItemBitmapCreationListener {
-        public void onPreSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+    private static class DynamicGridModification {
 
-        public void onPostSelectedItemBitmapCreation(View selectedView, int position, long itemId);
+        private List<Pair<Integer, Integer>> transitions;
+
+        DynamicGridModification() {
+            super();
+            this.transitions = new Stack<Pair<Integer, Integer>>();
+        }
+
+        public boolean hasTransitions() {
+            return !transitions.isEmpty();
+        }
+
+        public void addTransition(int oldPosition, int newPosition) {
+            transitions.add(new Pair<Integer, Integer>(oldPosition, newPosition));
+        }
+
+        public List<Pair<Integer, Integer>> getTransitions() {
+            Collections.reverse(transitions);
+            return transitions;
+        }
     }
 }
 
-class DynamicGridModification {
-
-    private List<Pair<Integer, Integer>> transitions;
-
-    DynamicGridModification() {
-        super();
-        this.transitions = new Stack<Pair<Integer, Integer>>();
-    }
-
-    public boolean hasTransitions() {
-        return !transitions.isEmpty();
-    }
-
-    public void addTransition(int oldPosition, int newPosition) {
-        transitions.add(new Pair<Integer, Integer>(oldPosition, newPosition));
-    }
-
-    public List<Pair<Integer, Integer>> getTransitions() {
-        Collections.reverse(transitions);
-        return transitions;
-    }
-}
