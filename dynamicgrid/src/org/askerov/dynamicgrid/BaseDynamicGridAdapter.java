@@ -51,6 +51,11 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
         notifyDataSetChanged();
     }
 
+    public void add(int position, Object item) {
+        addStableId(item);
+        mItems.add(position, item);
+        notifyDataSetChanged();
+    }
 
     public void add(List<?> items) {
         addAllStableId(items);
@@ -94,7 +99,7 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
         }
     }
 
-    public List getItems() {
+    public List<Object> getItems() {
         return mItems;
     }
 

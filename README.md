@@ -1,7 +1,7 @@
 DynamicGrid
 ===========
 
-Drag and drop GridView for Android provide mechanism to reorder grid items
+Drag and drop GridView for Android.
 
 Demo
 ----
@@ -17,7 +17,7 @@ All grid item animations require api 11 (Honeycomb).
 
 Usage
 ----------
-Usage same as for normal GridView except adapter. Adapter must extends
+All the same as for normal GridView. Adapter must extends
 [AbstractDynamicGridAdapter](https://github.com/askerov/DynamicGrid/blob/master/dynamicgrid/src/org/askerov/dynamicgid/AbstractDynamicGridAdapter.java "AbstractDynamicGridAdapter")
 or [BaseDynamicGridAdapter](https://github.com/askerov/DynamicGrid/blob/master/dynamicgrid/src/org/askerov/dynamicgid/BaseDynamicGridAdapter.java "BaseDynamicGridAdapter")   
        
@@ -47,5 +47,5 @@ You can find more detailed usage examle [here](https://github.com/askerov/Dynami
 
 Credits
 --------
-DynamicGridView based on [Daniel Olshansky](https://plus.google.com/108153578400873445224/) ListView cell dragging and rearranging [video](https://www.youtube.com/watch?v=_BZIvjMgH-Q).  
+DynamicGridView based on [Daniel Olshansky](https://plus.google.com/108153578400873445224/) ListView cell dragging and rearranging [example](https://www.youtube.com/watch?v=_BZIvjMgH-Q).  
 
