@@ -11,8 +11,7 @@ import java.util.List;
  * Time: 7:43 PM
  */
 
-    
-   
+
 /**
  * Abstract adapter for {@link org.askerov.dynamicgrid.DynamicGridView} with sable items id;
  */
@@ -49,10 +48,8 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter implements 
      * @param items
      */
     protected void addAllStableId(List<?> items) {
-        int startId = (int) getItemId(getCount() - 1);
-        startId++;
-        for (int i = startId; i < items.size(); i++) {
-            mIdMap.put(items.get(i), i);
+        for (Object item : items) {
+            addStableId(item);
         }
     }
 
