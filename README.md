@@ -29,6 +29,11 @@ To start Drag'n'drop mode:
 
     gridView.startEditMode();
     
+Or from onItemClik() and onItemLongClick()
+
+    gridView.startEditMode(position);
+    
+    
 To stop:
 
     gridView.stopEditMode();
