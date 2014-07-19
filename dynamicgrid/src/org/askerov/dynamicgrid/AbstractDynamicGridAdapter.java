@@ -54,6 +54,7 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter implements 
         for (int i = startId; i < items.size(); i++) {
             mIdMap.put(items.get(i), i);
         }
+        nextStableId=mIdMap.size();
     }
 
     /**
