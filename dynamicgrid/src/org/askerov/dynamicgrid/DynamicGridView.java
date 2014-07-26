@@ -488,8 +488,10 @@ public class DynamicGridView extends GridView {
             mHoverCell = getAndAddHoverView(selectedView);
             if (mSelectedItemBitmapCreationListener != null)
                 mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
-            if (isPostHoneycomb())
-                selectedView.setVisibility(View.INVISIBLE);
+            if (isPostHoneycomb()) {
+				selectedView.setVisibility(View.INVISIBLE);
+				getAdapterInterface().getViewVisibilityMap().put(position, false);
+			}
             mCellIsMobile = true;
             updateNeighborViewsForId(mMobileItemId);
             if (mDragListener != null) {
@@ -601,8 +603,9 @@ public class DynamicGridView extends GridView {
 
     private void reset(View mobileView) {
         idList.clear();
-        mMobileItemId = INVALID_ID;
-        mobileView.setVisibility(View.VISIBLE);
+		getAdapterInterface().getViewVisibilityMap().put(getPositionForID(mMobileItemId), true);
+		mobileView.setVisibility(View.VISIBLE);
+		mMobileItemId = INVALID_ID;
         mHoverCell = null;
         if (!mIsEditMode && isPostHoneycomb() && mWobbleInEditMode)
             stopWobble(true);
@@ -693,8 +696,10 @@ public class DynamicGridView extends GridView {
             mDownY = mLastEventY;
             mDownX = mLastEventX;
             mobileView.setVisibility(View.VISIBLE);
+			getAdapterInterface().getViewVisibilityMap().put(originalPosition, true);
             if (isPostHoneycomb()) {
                 targetView.setVisibility(View.INVISIBLE);
+				getAdapterInterface().getViewVisibilityMap().put(targetPosition, false);
             }
             updateNeighborViewsForId(mMobileItemId);
             final ViewTreeObserver observer = getViewTreeObserver();

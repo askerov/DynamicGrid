@@ -1,9 +1,12 @@
 package org.askerov.dynamicgrid;
 
 import android.content.Context;
+import android.view.View;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: alex askerov
@@ -14,6 +17,7 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
     private Context mContext;
 
     private ArrayList<Object> mItems = new ArrayList<Object>();
+	private HashMap<Integer, Boolean> mVisMap = new HashMap<Integer, Boolean>();
     private int mColumnCount;
 
     protected BaseDynamicGridAdapter(Context context, int columnCount) {
@@ -70,6 +74,23 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
         notifyDataSetChanged();
     }
 
+	/**
+	 * This method should be called for every view about to be returned by 
+	 * overridden {@link android.widget.Adapter#getView(int, android.view.View, android.view.ViewGroup)}
+	 * 
+	 * Check if there is an entry in visibility map for given position.
+	 * If the entry exists - change view's visibility accordingly. 
+	 * Otherwise view's visibility remains unchanged
+	 * 
+	 * @param position Position to search visibility map for
+	 * @param view View to change the visibility of
+	 */
+	protected void setViewVisibilityOnPosition(int position, View view){
+		Boolean visible = getViewVisibilityMap().get((position));
+		if (visible != null) {
+			view.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+		}
+	}
 
     @Override
     public int getCount() {
@@ -98,6 +119,11 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
             notifyDataSetChanged();
         }
     }
+
+	@Override
+	public Map<Integer, Boolean> getViewVisibilityMap() {
+		return mVisMap;
+	}
 
     public List<Object> getItems() {
         return mItems;
