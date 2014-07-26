@@ -37,6 +37,10 @@ public class CheeseDynamicAdapter extends BaseDynamicGridAdapter {
             holder = (CheeseViewHolder) convertView.getTag();
         }
         holder.build(getItem(position).toString());
+
+        //every implementation should call this method before returning the view
+        setViewVisibilityOnPosition(position, convertView);
+
         return convertView;
     }
 
