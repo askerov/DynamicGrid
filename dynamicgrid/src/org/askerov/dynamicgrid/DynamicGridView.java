@@ -357,6 +357,7 @@ public class DynamicGridView extends GridView {
 
 
     private void updateNeighborViewsForId(long itemId) {
+        idList.clear();
         int draggedPos = getPositionForID(itemId);
         for (int pos = getFirstVisiblePosition(); pos <= getLastVisiblePosition(); pos++) {
             if (draggedPos != pos) {
