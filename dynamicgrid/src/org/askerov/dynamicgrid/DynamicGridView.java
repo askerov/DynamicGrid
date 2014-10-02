@@ -722,9 +722,11 @@ public class DynamicGridView extends GridView {
 
             SwitchCellAnimator switchCellAnimator;
 
-            if(isPreL())
+            if(isPostHoneycomb() && isPreL())   //Between Android 3.0 and Android L
                 switchCellAnimator = new KitKatSwitchCellAnimator(deltaX, deltaY);
-            else
+            else if(isPreL())                   //Before Android 3.0
+                switchCellAnimator = new PreHoneycombCellAnimator(deltaX, deltaY);
+            else                                //Android L
                 switchCellAnimator = new LSwitchCellAnimator(deltaX, deltaY);
 
             updateNeighborViewsForId(mMobileItemId);
@@ -737,7 +739,23 @@ public class DynamicGridView extends GridView {
         void animateSwitchCell(final int originalPosition, final int targetPosition);
     }
 
-    /**
+    private class PreHoneycombCellAnimator implements SwitchCellAnimator {
+        private int mDeltaY;
+        private int mDeltaX;
+
+        public PreHoneycombCellAnimator(int deltaX, int deltaY) {
+            mDeltaX = deltaX;
+            mDeltaY = deltaY;
+        }
+
+        @Override
+        public void animateSwitchCell(int originalPosition, int targetPosition) {
+            mTotalOffsetY += mDeltaY;
+            mTotalOffsetX += mDeltaX;
+        }
+    }
+
+        /**
      * A {@link org.askerov.dynamicgrid.DynamicGridView.SwitchCellAnimator} for versions KitKat and below.
      */
     private class KitKatSwitchCellAnimator implements SwitchCellAnimator {
