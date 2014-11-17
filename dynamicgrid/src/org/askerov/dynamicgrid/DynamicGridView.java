@@ -299,7 +299,7 @@ public class DynamicGridView extends GridView {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private ObjectAnimator createBaseWobble(final View v) {
 
-        if(!isPreL())
+        if (!isPreL())
             v.setLayerType(LAYER_TYPE_SOFTWARE, null);
 
         ObjectAnimator animator = new ObjectAnimator();
@@ -410,7 +410,6 @@ public class DynamicGridView extends GridView {
                 mDownX = (int) event.getX();
                 mDownY = (int) event.getY();
                 mActivePointerId = event.getPointerId(0);
-
                 if (mIsEditMode && isEnabled()) {
                     layoutChildren();
                     int position = pointToPosition(mDownX, mDownY);
@@ -420,6 +419,7 @@ public class DynamicGridView extends GridView {
                 }
 
                 break;
+
             case MotionEvent.ACTION_MOVE:
                 if (mActivePointerId == INVALID_ID) {
                     break;
@@ -442,8 +442,8 @@ public class DynamicGridView extends GridView {
                     handleMobileCellScroll();
                     return false;
                 }
-
                 break;
+
             case MotionEvent.ACTION_UP:
                 touchEventsEnded();
 
@@ -460,6 +460,7 @@ public class DynamicGridView extends GridView {
                     }
                 }
                 break;
+
             case MotionEvent.ACTION_CANCEL:
                 touchEventsCancelled();
 
@@ -469,6 +470,7 @@ public class DynamicGridView extends GridView {
                     }
                 }
                 break;
+
             case MotionEvent.ACTION_POINTER_UP:
                 /* If a multitouch event took place and the original touch dictating
                  * the movement of the hover cell has ended, then the dragging event
@@ -481,6 +483,7 @@ public class DynamicGridView extends GridView {
                     touchEventsEnded();
                 }
                 break;
+
             default:
                 break;
         }
@@ -616,10 +619,20 @@ public class DynamicGridView extends GridView {
         mMobileItemId = INVALID_ID;
         mobileView.setVisibility(View.VISIBLE);
         mHoverCell = null;
-        if (!mIsEditMode && isPostHoneycomb() && mWobbleInEditMode && isPreL())
-            stopWobble(true);
-        if (mIsEditMode && isPostHoneycomb() && mWobbleInEditMode && isPreL())
-            restartWobble();
+        if (isPostHoneycomb() && mWobbleInEditMode) {
+            if (mIsEditMode) {
+                restartWobble();
+            } else{
+                stopWobble(true);
+            }
+        }
+        //ugly fix for unclear disappearing items after reorder
+        for (int i = 0; i < getLastVisiblePosition() - getFirstVisiblePosition(); i++) {
+            View child = getChildAt(i);
+            if (child != null) {
+                child.setVisibility(View.VISIBLE);
+            }
+        }
         invalidate();
     }
 
@@ -722,9 +735,9 @@ public class DynamicGridView extends GridView {
 
             SwitchCellAnimator switchCellAnimator;
 
-            if(isPostHoneycomb() && isPreL())   //Between Android 3.0 and Android L
+            if (isPostHoneycomb() && isPreL())   //Between Android 3.0 and Android L
                 switchCellAnimator = new KitKatSwitchCellAnimator(deltaX, deltaY);
-            else if(isPreL())                   //Before Android 3.0
+            else if (isPreL())                   //Before Android 3.0
                 switchCellAnimator = new PreHoneycombCellAnimator(deltaX, deltaY);
             else                                //Android L
                 switchCellAnimator = new LSwitchCellAnimator(deltaX, deltaY);
@@ -755,7 +768,7 @@ public class DynamicGridView extends GridView {
         }
     }
 
-        /**
+    /**
      * A {@link org.askerov.dynamicgrid.DynamicGridView.SwitchCellAnimator} for versions KitKat and below.
      */
     private class KitKatSwitchCellAnimator implements SwitchCellAnimator {
