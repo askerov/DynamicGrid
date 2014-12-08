@@ -1,25 +1,13 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:0.13.+'
-    }
-}
-
-apply plugin: 'android'
-
-repositories {
-    mavenCentral()
-}
+apply plugin: 'com.android.application'
 
 dependencies {
+    compile project(':dynamicgrid')
     compile 'com.android.support:support-v4:19.+'
 }
+
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1"
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
 
     sourceSets {
         main {
@@ -31,9 +19,5 @@ android {
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
         }
-    }
-
-    dependencies {
-        compile project(':dynamicgrid')
     }
 }
