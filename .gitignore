@@ -12,35 +12,21 @@
 bin/
 gen/
 
-# Local configuration file (sdk path, etc)
-local.properties
+*.properties
 
 # Eclipse project files
 .classpath
 .project
 
+.idea/
+build/
 *.iml
-
-dynamicgrid/.idea/workspace.xml
-
-dynamicgrid/.idea/
-dynamicgrid/project.properties
-
-dynamicgrid/project.properties
-
-*.properties
 
 dynamicgrid/proguard-project.txt
 
 dynamicgrid/build.xml
 
 dynamicgrid/ant.properties
-
-dynamicgrid/.idea/
-
-dynamicgrid/.idea/codeStyleSettings.xml
-
-example/.idea/
 
 example/build.xml
 
