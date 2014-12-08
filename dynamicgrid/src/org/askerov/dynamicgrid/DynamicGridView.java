@@ -299,7 +299,7 @@ public class DynamicGridView extends GridView {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private ObjectAnimator createBaseWobble(final View v) {
 
-        if (!isPreL())
+        if (!isPreLollipop())
             v.setLayerType(LAYER_TYPE_SOFTWARE, null);
 
         ObjectAnimator animator = new ObjectAnimator();
@@ -651,18 +651,13 @@ public class DynamicGridView extends GridView {
     }
 
     /**
-     * The GridView from Android L requires some different setVisibility() logic
-     * when switching cells. Unfortunately, both 4.4W and the pre-release L
-     * report 20 for the SDK_INT, but we want to return true for 4.4W and false
-     * for Android L. So, we check the release name for "L" if we see SDK 20.
-     * Hopefully, Android L will actually be SDK 21 or later when it ships.
+     * The GridView from Android Lollipoop requires some different
+     * setVisibility() logic when switching cells.
      *
-     * @return
+     * @return true if OS version is less than Lollipop, false if not
      */
-    public static boolean isPreL() {
-        final int KITKAT_WATCH = 20;
-        return (Build.VERSION.SDK_INT < KITKAT_WATCH) ||
-                ((Build.VERSION.SDK_INT == KITKAT_WATCH) && !"L".equals(Build.VERSION.RELEASE));
+    public static boolean isPreLollipop() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
     }
 
     private void touchEventsCancelled() {
@@ -735,9 +730,9 @@ public class DynamicGridView extends GridView {
 
             SwitchCellAnimator switchCellAnimator;
 
-            if (isPostHoneycomb() && isPreL())   //Between Android 3.0 and Android L
+            if (isPostHoneycomb() && isPreLollipop())   //Between Android 3.0 and Android L
                 switchCellAnimator = new KitKatSwitchCellAnimator(deltaX, deltaY);
-            else if (isPreL())                   //Before Android 3.0
+            else if (isPreLollipop())                   //Before Android 3.0
                 switchCellAnimator = new PreHoneycombCellAnimator(deltaX, deltaY);
             else                                //Android L
                 switchCellAnimator = new LSwitchCellAnimator(deltaX, deltaY);
