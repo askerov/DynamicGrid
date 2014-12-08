@@ -21,32 +21,41 @@ All the same as for normal GridView. Adapter must extends
 [AbstractDynamicGridAdapter](https://github.com/askerov/DynamicGrid/blob/master/dynamicgrid/src/org/askerov/dynamicgid/AbstractDynamicGridAdapter.java "AbstractDynamicGridAdapter")
 or [BaseDynamicGridAdapter](https://github.com/askerov/DynamicGrid/blob/master/dynamicgrid/src/org/askerov/dynamicgid/BaseDynamicGridAdapter.java "BaseDynamicGridAdapter")   
        
-    gridView = (DynamicGridView) findViewById(R.id.dynamic_grid);
-    // pass to adapter context, list of items and number of columns count
-    gridView.setAdapter(new MyDynamicGridAdapter(this, itemsList, 3));
+```java
+gridView = (DynamicGridView) findViewById(R.id.dynamic_grid);
+// pass to adapter context, list of items and number of columns count
+gridView.setAdapter(new MyDynamicGridAdapter(this, itemsList, 3));
+```
     
 To start Drag'n'drop mode:
 
-    gridView.startEditMode();
+```java
+gridView.startEditMode();
+```
     
 Or from onItemClik() and onItemLongClick()
 
-    gridView.startEditMode(position);
-    
+```java
+gridView.startEditMode(position);
+```
     
 To stop:
 
-    gridView.stopEditMode();
+```java
+gridView.stopEditMode();
+```
     
 Adding drop listener:
 
-    gridView.setOnDropListener(new DynamicGridView.OnDropListener(){
-        @Override
-        public void onActionDrop(){
-            // stop edit mode immediately after drop item
-            gridView.stopEditMode();
-            }
-        });
+```java
+gridView.setOnDropListener(new DynamicGridView.OnDropListener(){
+    @Override
+    public void onActionDrop(){
+        // stop edit mode immediately after drop item
+        gridView.stopEditMode();
+        }
+    });
+```
 
 You can find more detailed usage example [here](https://github.com/askerov/DynamicGrid/tree/master/example).  
 
