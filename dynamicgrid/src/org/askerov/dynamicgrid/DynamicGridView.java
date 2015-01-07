@@ -131,7 +131,7 @@ public class DynamicGridView extends GridView {
         requestDisallowInterceptTouchEvent(true);
         if (isPostHoneycomb() && mWobbleInEditMode)
             startWobbleAnimation();
-        if (position != -1 && mDragListener != null) {
+        if (position != -1) {
             startDragAtPosition(position);
         }
         mIsEditMode = true;
