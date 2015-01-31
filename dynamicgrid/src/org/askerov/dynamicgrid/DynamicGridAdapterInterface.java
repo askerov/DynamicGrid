@@ -25,4 +25,9 @@ public interface DynamicGridAdapterInterface {
      */
     int getColumnCount();
 
+    /**
+     * Determines whether the item in the specified <code>position</code> can be reordered.
+     */
+    boolean canReorder(int position);
+
 }
