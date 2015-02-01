@@ -99,6 +99,11 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
         }
     }
 
+    @Override
+    public boolean canReorder(int position) {
+        return true;
+    }
+
     public List<Object> getItems() {
         return mItems;
     }

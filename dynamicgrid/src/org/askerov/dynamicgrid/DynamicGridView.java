@@ -377,7 +377,7 @@ public class DynamicGridView extends GridView {
         idList.clear();
         int draggedPos = getPositionForID(itemId);
         for (int pos = getFirstVisiblePosition(); pos <= getLastVisiblePosition(); pos++) {
-            if (draggedPos != pos) {
+            if (draggedPos != pos && getAdapterInterface().canReorder(pos)) {
                 idList.add(getId(pos));
             }
         }
@@ -726,7 +726,8 @@ public class DynamicGridView extends GridView {
             final int originalPosition = getPositionForView(mMobileView);
             int targetPosition = getPositionForView(targetView);
 
-            if (targetPosition == INVALID_POSITION) {
+            final DynamicGridAdapterInterface adapter = getAdapterInterface();
+            if (targetPosition == INVALID_POSITION || !adapter.canReorder(originalPosition) || !adapter.canReorder(targetPosition)) {
                 updateNeighborViewsForId(mMobileItemId);
                 return;
             }
