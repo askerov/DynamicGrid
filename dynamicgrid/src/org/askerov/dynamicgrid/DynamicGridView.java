@@ -68,6 +68,7 @@ public class DynamicGridView extends GridView {
     private boolean mWobbleInEditMode = true;
     private boolean mIsEditModeEnabled = true;
 
+    private OnScrollListener mUserScrollListener;
     private OnDropListener mDropListener;
     private OnDragListener mDragListener;
     private OnEditModeChangeListener mEditModeChangeListener;
@@ -103,6 +104,11 @@ public class DynamicGridView extends GridView {
     public DynamicGridView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context);
+    }
+
+    @Override
+    public void setOnScrollListener(OnScrollListener scrollListener) {
+        this.mUserScrollListener = scrollListener;
     }
 
     public void setOnDropListener(OnDropListener dropListener) {
@@ -273,7 +279,7 @@ public class DynamicGridView extends GridView {
     }
 
     public void init(Context context) {
-        setOnScrollListener(mScrollListener);
+        super.setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int) (SMOOTH_SCROLL_AMOUNT_AT_EDGE * metrics.density + 0.5f);
         mOverlapIfSwitchStraightLine = getResources().getDimensionPixelSize(R.dimen.dgv_overlap_if_switch_straight_line);
@@ -1029,6 +1035,9 @@ public class DynamicGridView extends GridView {
             if (isPostHoneycomb() && mWobbleInEditMode) {
                 updateWobbleState(visibleItemCount);
             }
+            if (mUserScrollListener != null) {
+                mUserScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+            }
         }
 
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -1057,6 +1066,9 @@ public class DynamicGridView extends GridView {
             mCurrentScrollState = scrollState;
             mScrollState = scrollState;
             isScrollCompleted();
+            if (mUserScrollListener != null) {
+                mUserScrollListener.onScrollStateChanged(view, scrollState);
+            }
         }
 
         /**
