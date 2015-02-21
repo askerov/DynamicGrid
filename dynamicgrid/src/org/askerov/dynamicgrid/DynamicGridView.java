@@ -38,7 +38,7 @@ import java.util.Stack;
  * Time: 12:31 PM
  */
 public class DynamicGridView extends GridView {
-    public final static int REORDER_TYPE_NORMAL = 1;
+    public final static int REORDER_TYPE_SNAKE = 1;
     public final static int REORDER_TYPE_SWAP = 2;
     private static final int INVALID_ID = -1;
 
@@ -820,7 +820,7 @@ public class DynamicGridView extends GridView {
                 mTotalOffsetY += mDeltaY;
                 mTotalOffsetX += mDeltaX;
 
-                animateReorders(mOriginalPosition, mTargetPosition);
+                animateReorder(mOriginalPosition, mTargetPosition);
 
                 mPreviousMobileView.setVisibility(View.VISIBLE);
 
@@ -866,7 +866,7 @@ public class DynamicGridView extends GridView {
                 mTotalOffsetY += mDeltaY;
                 mTotalOffsetX += mDeltaX;
 
-                animateReorder(mOriginalPosition, mTargetPosition);
+                animateSnakeReorder(mOriginalPosition, mTargetPosition);
 
                 assert mMobileView != null;
                 mMobileView.setVisibility(View.VISIBLE);
@@ -923,16 +923,16 @@ public class DynamicGridView extends GridView {
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateReorders(final int oldPosition, final int newPosition) {
-        if(getAdapterInterface().getReorderType() == REORDER_TYPE_NORMAL) {
-            animateReorder(oldPosition, newPosition);
+    private void animateReorder(final int oldPosition, final int newPosition) {
+        if(getAdapterInterface().getReorderType() == REORDER_TYPE_SNAKE) {
+            animateSnakeReorder(oldPosition, newPosition);
         } else if(getAdapterInterface().getReorderType() == REORDER_TYPE_SWAP) {
-            animateSwap(oldPosition, newPosition);
+            animateSwapReorder(oldPosition, newPosition);
         }
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateReorder(final int oldPosition, final int newPosition) {
+    private void animateSnakeReorder(final int oldPosition, final int newPosition) {
         boolean isForward = newPosition > oldPosition;
         List<Animator> resultList = new LinkedList<Animator>();
 
@@ -948,7 +948,7 @@ public class DynamicGridView extends GridView {
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void animateSwap(final int oldPosition, final int newPosition) {
+    private void animateSwapReorder(final int oldPosition, final int newPosition) {
 
         List<Animator> resultList = new LinkedList<Animator>();
 

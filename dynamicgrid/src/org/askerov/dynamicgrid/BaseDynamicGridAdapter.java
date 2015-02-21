@@ -11,12 +11,11 @@ import java.util.List;
  * Time: 10:49 PM
  */
 public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter {
-
     private Context mContext;
 
     private ArrayList<Object> mItems = new ArrayList<Object>();
     private int mColumnCount;
-    private int mReorderType = DynamicGridView.REORDER_TYPE_NORMAL;
+    private int mReorderType = DynamicGridView.REORDER_TYPE_SNAKE;
 
     protected BaseDynamicGridAdapter(Context context, int columnCount) {
         this.mContext = context;
@@ -100,7 +99,7 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
     @Override
     public void reorderItems(int originalPosition, int newPosition) {
         if (newPosition < getCount()) {
-            if(mReorderType == DynamicGridView.REORDER_TYPE_NORMAL) {
+            if(mReorderType == DynamicGridView.REORDER_TYPE_SNAKE) {
                 DynamicGridUtils.reorder(mItems, originalPosition, newPosition);
             } else if(mReorderType == DynamicGridView.REORDER_TYPE_SWAP) {
                 DynamicGridUtils.swap(mItems, originalPosition, newPosition);
