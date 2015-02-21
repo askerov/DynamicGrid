@@ -30,4 +30,9 @@ public interface DynamicGridAdapterInterface {
      */
     boolean canReorder(int position);
 
+    /**
+     * Determines reorder type.
+     */
+    int getReorderType();
+
 }

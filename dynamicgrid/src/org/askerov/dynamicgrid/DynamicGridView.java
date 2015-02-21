@@ -1,6 +1,11 @@
 package org.askerov.dynamicgrid;
 
-import android.animation.*;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -21,7 +26,11 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
 
 /**
  * Author: alex askerov
@@ -29,6 +38,8 @@ import java.util.*;
  * Time: 12:31 PM
  */
 public class DynamicGridView extends GridView {
+    public final static int REORDER_TYPE_NORMAL = 1;
+    public final static int REORDER_TYPE_SWAP = 2;
     private static final int INVALID_ID = -1;
 
     private static final int MOVE_DURATION = 300;
@@ -809,7 +820,7 @@ public class DynamicGridView extends GridView {
                 mTotalOffsetY += mDeltaY;
                 mTotalOffsetX += mDeltaX;
 
-                animateReorder(mOriginalPosition, mTargetPosition);
+                animateReorders(mOriginalPosition, mTargetPosition);
 
                 mPreviousMobileView.setVisibility(View.VISIBLE);
 
@@ -912,31 +923,76 @@ public class DynamicGridView extends GridView {
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void animateReorders(final int oldPosition, final int newPosition) {
+        if(getAdapterInterface().getReorderType() == REORDER_TYPE_NORMAL) {
+            animateReorder(oldPosition, newPosition);
+        } else if(getAdapterInterface().getReorderType() == REORDER_TYPE_SWAP) {
+            animateSwap(oldPosition, newPosition);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void animateReorder(final int oldPosition, final int newPosition) {
         boolean isForward = newPosition > oldPosition;
         List<Animator> resultList = new LinkedList<Animator>();
-        if (isForward) {
-            for (int pos = Math.min(oldPosition, newPosition); pos < Math.max(oldPosition, newPosition); pos++) {
-                View view = getViewForId(getId(pos));
-                if ((pos + 1) % getColumnCount() == 0) {
-                    resultList.add(createTranslationAnimations(view, -view.getWidth() * (getColumnCount() - 1), 0,
-                            view.getHeight(), 0));
-                } else {
-                    resultList.add(createTranslationAnimations(view, view.getWidth(), 0, 0, 0));
-                }
-            }
-        } else {
-            for (int pos = Math.max(oldPosition, newPosition); pos > Math.min(oldPosition, newPosition); pos--) {
-                View view = getViewForId(getId(pos));
-                if ((pos + getColumnCount()) % getColumnCount() == 0) {
-                    resultList.add(createTranslationAnimations(view, view.getWidth() * (getColumnCount() - 1), 0,
-                            -view.getHeight(), 0));
-                } else {
-                    resultList.add(createTranslationAnimations(view, -view.getWidth(), 0, 0, 0));
-                }
-            }
+
+        for (int pos = Math.min(oldPosition, newPosition); pos < Math.max(oldPosition, newPosition); pos++) {
+
+            int oldViewPosition = isForward ? pos : pos+1;
+            int newViewPosition = isForward ? pos+1 : pos;
+
+            resultList.add(createViewSwapAnimations(oldViewPosition, newViewPosition));
         }
 
+        startAnimations(resultList);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void animateSwap(final int oldPosition, final int newPosition) {
+
+        List<Animator> resultList = new LinkedList<Animator>();
+
+        resultList.add(createViewSwapAnimations(oldPosition, newPosition));
+
+        startAnimations(resultList);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private AnimatorSet createTranslationAnimations(View view, float startX, float endX, float startY, float endY) {
+        ObjectAnimator animX = ObjectAnimator.ofFloat(view, "translationX", startX, endX);
+        ObjectAnimator animY = ObjectAnimator.ofFloat(view, "translationY", startY, endY);
+        AnimatorSet animSetXY = new AnimatorSet();
+        animSetXY.playTogether(animX, animY);
+        return animSetXY;
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        if (mHoverCell != null) {
+            mHoverCell.draw(canvas);
+        }
+    }
+
+    /**
+     * Basically the old view is set to the new position and
+     * animates it's way from the old position to the new position.
+     * @param oldViewPosition Position of the old view.
+     * @param newViewPosition Position of the new view.
+     * @return
+     */
+    private AnimatorSet createViewSwapAnimations(int oldViewPosition, int newViewPosition) {
+        View viewOld = getViewForId(getId(oldViewPosition));
+        View viewNew = getViewForId(getId(newViewPosition));
+
+        return createTranslationAnimations(viewOld, viewNew.getX()-viewOld.getX(), 0, viewNew.getY()-viewOld.getY(), 0);
+    }
+
+    /**
+     *
+     * @param resultList
+     */
+    private void startAnimations(List<Animator> resultList) {
         AnimatorSet resultSet = new AnimatorSet();
         resultSet.playTogether(resultList);
         resultSet.setDuration(MOVE_DURATION);
@@ -956,25 +1012,6 @@ public class DynamicGridView extends GridView {
         });
         resultSet.start();
     }
-
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private AnimatorSet createTranslationAnimations(View view, float startX, float endX, float startY, float endY) {
-        ObjectAnimator animX = ObjectAnimator.ofFloat(view, "translationX", startX, endX);
-        ObjectAnimator animY = ObjectAnimator.ofFloat(view, "translationY", startY, endY);
-        AnimatorSet animSetXY = new AnimatorSet();
-        animSetXY.playTogether(animX, animY);
-        return animSetXY;
-    }
-
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-        if (mHoverCell != null) {
-            mHoverCell.draw(canvas);
-        }
-    }
-
 
     public interface OnDropListener {
         void onActionDrop();
