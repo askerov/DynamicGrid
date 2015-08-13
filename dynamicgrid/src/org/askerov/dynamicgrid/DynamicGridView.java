@@ -900,7 +900,7 @@ public class DynamicGridView extends GridView {
     }
 
     private Point getColumnAndRowForView(View view) {
-        int pos = getPositionForView(view);
+        int pos = getPositionForView(view) - getFirstVisiblePosition();
         int columns = getColumnCount();
         int column = pos % columns;
         int row = pos / columns;
