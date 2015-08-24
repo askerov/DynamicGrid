@@ -68,7 +68,6 @@ public class DynamicGridView extends GridView {
     private boolean mWobbleInEditMode = true;
     private boolean mIsEditModeEnabled = true;
 
-    private OnScrollListener mUserScrollListener;
     private OnDropListener mDropListener;
     private OnDragListener mDragListener;
     private OnEditModeChangeListener mEditModeChangeListener;
@@ -106,11 +105,6 @@ public class DynamicGridView extends GridView {
         init(context);
     }
 
-    @Override
-    public void setOnScrollListener(OnScrollListener scrollListener) {
-        this.mUserScrollListener = scrollListener;
-    }
-
     public void setOnDropListener(OnDropListener dropListener) {
         this.mDropListener = dropListener;
     }
@@ -137,7 +131,7 @@ public class DynamicGridView extends GridView {
         requestDisallowInterceptTouchEvent(true);
         if (isPostHoneycomb() && mWobbleInEditMode)
             startWobbleAnimation();
-        if (position != -1) {
+        if (position != -1 && mDragListener != null) {
             startDragAtPosition(position);
         }
         mIsEditMode = true;
@@ -279,7 +273,7 @@ public class DynamicGridView extends GridView {
     }
 
     public void init(Context context) {
-        super.setOnScrollListener(mScrollListener);
+        setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int) (SMOOTH_SCROLL_AMOUNT_AT_EDGE * metrics.density + 0.5f);
         mOverlapIfSwitchStraightLine = getResources().getDimensionPixelSize(R.dimen.dgv_overlap_if_switch_straight_line);
@@ -305,7 +299,7 @@ public class DynamicGridView extends GridView {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private ObjectAnimator createBaseWobble(final View v) {
 
-        if (!isPreLollipop())
+        if (!isPreL())
             v.setLayerType(LAYER_TYPE_SOFTWARE, null);
 
         ObjectAnimator animator = new ObjectAnimator();
@@ -377,7 +371,7 @@ public class DynamicGridView extends GridView {
         idList.clear();
         int draggedPos = getPositionForID(itemId);
         for (int pos = getFirstVisiblePosition(); pos <= getLastVisiblePosition(); pos++) {
-            if (draggedPos != pos && getAdapterInterface().canReorder(pos)) {
+            if (draggedPos != pos) {
                 idList.add(getId(pos));
             }
         }
@@ -657,13 +651,18 @@ public class DynamicGridView extends GridView {
     }
 
     /**
-     * The GridView from Android Lollipoop requires some different
-     * setVisibility() logic when switching cells.
+     * The GridView from Android L requires some different setVisibility() logic
+     * when switching cells. Unfortunately, both 4.4W and the pre-release L
+     * report 20 for the SDK_INT, but we want to return true for 4.4W and false
+     * for Android L. So, we check the release name for "L" if we see SDK 20.
+     * Hopefully, Android L will actually be SDK 21 or later when it ships.
      *
-     * @return true if OS version is less than Lollipop, false if not
+     * @return
      */
-    public static boolean isPreLollipop() {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+    public static boolean isPreL() {
+        final int KITKAT_WATCH = 20;
+        return (Build.VERSION.SDK_INT < KITKAT_WATCH) ||
+                ((Build.VERSION.SDK_INT == KITKAT_WATCH) && !"L".equals(Build.VERSION.RELEASE));
     }
 
     private void touchEventsCancelled() {
@@ -721,8 +720,7 @@ public class DynamicGridView extends GridView {
             final int originalPosition = getPositionForView(mMobileView);
             int targetPosition = getPositionForView(targetView);
 
-            final DynamicGridAdapterInterface adapter = getAdapterInterface();
-            if (targetPosition == INVALID_POSITION || !adapter.canReorder(originalPosition) || !adapter.canReorder(targetPosition)) {
+            if (targetPosition == INVALID_POSITION) {
                 updateNeighborViewsForId(mMobileItemId);
                 return;
             }
@@ -737,9 +735,9 @@ public class DynamicGridView extends GridView {
 
             SwitchCellAnimator switchCellAnimator;
 
-            if (isPostHoneycomb() && isPreLollipop())   //Between Android 3.0 and Android L
+            if (isPostHoneycomb() && isPreL())   //Between Android 3.0 and Android L
                 switchCellAnimator = new KitKatSwitchCellAnimator(deltaX, deltaY);
-            else if (isPreLollipop())                   //Before Android 3.0
+            else if (isPreL())                   //Before Android 3.0
                 switchCellAnimator = new PreHoneycombCellAnimator(deltaX, deltaY);
             else                                //Android L
                 switchCellAnimator = new LSwitchCellAnimator(deltaX, deltaY);
@@ -1031,9 +1029,6 @@ public class DynamicGridView extends GridView {
             if (isPostHoneycomb() && mWobbleInEditMode) {
                 updateWobbleState(visibleItemCount);
             }
-            if (mUserScrollListener != null) {
-                mUserScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
-            }
         }
 
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -1062,9 +1057,6 @@ public class DynamicGridView extends GridView {
             mCurrentScrollState = scrollState;
             mScrollState = scrollState;
             isScrollCompleted();
-            if (mUserScrollListener != null) {
-                mUserScrollListener.onScrollStateChanged(view, scrollState);
-            }
         }
 
         /**
@@ -1136,5 +1128,64 @@ public class DynamicGridView extends GridView {
             return transitions;
         }
     }
-}
 
+    /**
+     * onScrollが呼ばれた際の処理（コールバックに渡す用）
+     *
+     * @param firstVisibleItem
+     * @param visibleItemCount
+     * @param totalItemCount
+     */
+    private void onDynamicScroll(int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if (onDynamicScrollListener != null) {
+            onDynamicScrollListener.onScroll(firstVisibleItem, visibleItemCount, totalItemCount);
+        }
+    }
+
+    // onScrollが呼ばれた際のコールバック
+    private OnDynamicScrollListener onDynamicScrollListener;
+
+    // onScrollが呼ばれた際のコールバック
+    public interface OnDynamicScrollListener {
+        public void onScroll(int firstVisibleItem, int visibleItemCount, int totalItemCount);
+    }
+
+    /**
+     * onScrollが呼び出された際のコールバックをセットする
+     *
+     * @param onDynamicScrollListener
+     */
+    public void setOnDynamicScrollListener(OnDynamicScrollListener onDynamicScrollListener) {
+        this.onDynamicScrollListener = onDynamicScrollListener;
+    }
+
+    /**
+     * onScrollのコールバックリスナーを削除する
+     */
+    public void removeOnDynamicScrollListener() {
+        onDynamicScrollListener = null;
+    }
+
+    // １番目のセルを動かせるかどうか設定する（未整理プリの場合はfalseとする）
+    private boolean canFirstCellMovable = true;
+
+    /**
+     * 最初のオブジェクトは移動できないかどうか
+     *
+     * @param movable true:最初のオブジェクトは移動出来るかどうか
+     */
+    public void setFirstCellMovable(boolean movable) {
+        canFirstCellMovable = movable;
+    }
+
+    /**
+     * 最初のオブジェクトは移動出来るかどうか
+     *
+     * @return true:移動出来ます | false:移動出来ない。
+     */
+    public boolean canFirstCellMovable(){
+        return canFirstCellMovable;
+    }
+
+
+}
