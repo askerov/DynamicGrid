@@ -1029,6 +1029,9 @@ public class DynamicGridView extends GridView {
             if (isPostHoneycomb() && mWobbleInEditMode) {
                 updateWobbleState(visibleItemCount);
             }
+
+            // onScrollを検知するために独自実装を追加
+            onDynamicScroll(firstVisibleItem, visibleItemCount, totalItemCount);
         }
 
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -1128,6 +1131,10 @@ public class DynamicGridView extends GridView {
             return transitions;
         }
     }
+
+
+    /* 以下は独自に実装を追加 */
+    
 
     /**
      * onScrollが呼ばれた際の処理（コールバックに渡す用）
