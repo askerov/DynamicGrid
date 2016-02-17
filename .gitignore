@@ -22,6 +22,9 @@ gen/
 build/
 *.iml
 
+# Gradle 
+.gradle/
+
 dynamicgrid/proguard-project.txt
 
 dynamicgrid/build.xml

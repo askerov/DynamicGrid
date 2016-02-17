@@ -15,6 +15,7 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
 
     private ArrayList<Object> mItems = new ArrayList<Object>();
     private int mColumnCount;
+    private int mReorderType = DynamicGridView.REORDER_TYPE_SNAKE;
 
     protected BaseDynamicGridAdapter(Context context, int columnCount) {
         this.mContext = context;
@@ -37,6 +38,10 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
         clear();
         init(items);
         notifyDataSetChanged();
+    }
+
+    public void setReorderType(int reorderType) {
+        this.mReorderType = reorderType;
     }
 
     public void clear() {
@@ -94,7 +99,11 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
     @Override
     public void reorderItems(int originalPosition, int newPosition) {
         if (newPosition < getCount()) {
-            DynamicGridUtils.reorder(mItems, originalPosition, newPosition);
+            if(mReorderType == DynamicGridView.REORDER_TYPE_SNAKE) {
+                DynamicGridUtils.reorder(mItems, originalPosition, newPosition);
+            } else if(mReorderType == DynamicGridView.REORDER_TYPE_SWAP) {
+                DynamicGridUtils.swap(mItems, originalPosition, newPosition);
+            }
             notifyDataSetChanged();
         }
     }
@@ -102,6 +111,12 @@ public abstract class BaseDynamicGridAdapter extends AbstractDynamicGridAdapter 
     @Override
     public boolean canReorder(int position) {
         return true;
+    }
+
+    @Override
+    public int getReorderType()
+    {
+        return mReorderType;
     }
 
     public List<Object> getItems() {
