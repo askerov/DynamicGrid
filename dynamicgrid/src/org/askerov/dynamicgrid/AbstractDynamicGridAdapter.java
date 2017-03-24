@@ -51,6 +51,7 @@ public abstract class AbstractDynamicGridAdapter extends BaseAdapter implements 
         for (Object item : items) {
             addStableId(item);
         }
+        nextStableId=mIdMap.size();
     }
 
     /**
