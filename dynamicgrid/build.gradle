@@ -7,6 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 8
         targetSdkVersion 21
+        versionCode 2
+        versionName '1.0.1'
     }
 
     sourceSets {
@@ -18,6 +20,13 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
+        }
+    }
+
+    buildTypes {
+        release {
+            debuggable false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules-release.pro'
         }
     }
 }

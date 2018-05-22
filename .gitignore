@@ -12,8 +12,6 @@
 bin/
 gen/
 
-*.properties
-
 # Eclipse project files
 .classpath
 .project
